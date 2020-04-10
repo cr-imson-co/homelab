@@ -1,0 +1,10 @@
+[Unit]
+Description=Regular backups for Docker volumes.
+
+[Timer]
+OnCalendar=Mon *-*-* 02:00:00
+RandomizedDelaySec=3600
+Persistent=true
+
+[Install]
+WantedBy=timers.target

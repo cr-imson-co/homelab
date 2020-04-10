@@ -1,0 +1,299 @@
+#
+# cr.imson.co
+#
+# Home Lab docker configuration
+# @author Damian Bushong <katana@odios.us>
+#
+
+version: "3.7"
+
+networks:
+  crimson:
+    name: crimson
+
+volumes:
+  jenkins_home:
+  gitlab_config:
+  gitlab_logs:
+  gitlab_data:
+  mariadb_data:
+  registry_data:
+  gitlab_runner_config:
+
+secrets:
+  mysql_root_password:
+    file: ./mysql_root_password
+  mysql_password:
+    file: ./mysql_password
+
+services:
+  nginx-proxy:
+    container_name: nginx
+    image: jwilder/nginx-proxy:latest
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-file: "10"
+        max-size: "10m"
+    environment:
+      DEFAULT_HOST: cr.imson.co
+    networks:
+      - crimson
+    ports:
+      - "0.0.0.0:80:80"
+      - "0.0.0.0:443:443"
+    volumes:
+      - type: bind
+        source: /var/run/docker.sock
+        target: /tmp/docker.sock
+        read_only: true
+      - type: bind
+        source: /etc/nginx/certs
+        target: /etc/nginx/certs
+        read_only: true
+      - type: bind
+        source: /etc/nginx/vhost.d
+        target: /etc/nginx/vhost.d
+        read_only: true
+      - type: bind
+        source: /etc/nginx/htpasswd
+        target: /etc/nginx/htpasswd
+
+  nginx:
+    container_name: landing_page
+    image: nginx:alpine
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-file: "10"
+        max-size: "10m"
+    hostname: cr.imson.co
+    environment:
+      VIRTUAL_HOST: cr.imson.co
+      CERT_NAME: cr.imson.co
+      SSL_POLICY: Mozilla-Intermediate
+      HTTPS_METHOD: redirect
+    networks:
+      crimson:
+    ports:
+      - "80"
+    volumes:
+      - type: bind
+        source: /srv/html
+        target: /usr/share/nginx/html
+        read_only: true
+    # healthcheck:
+    #   test: curl -sSLf http://localhost/ >/dev/null || exit 1
+    #   start_period: 30s
+    #   interval: 1m
+    #   retries: 3
+
+  gitlab:
+    container_name: gitlab
+    image: gitlab/gitlab-ce:latest
+    restart: unless-stopped
+    stop_grace_period: 2m
+    logging:
+      driver: "json-file"
+      options:
+        max-file: "10"
+        max-size: "10m"
+    hostname: gitlab.cr.imson.co
+    environment:
+      VIRTUAL_HOST: gitlab.cr.imson.co,im.cr.imson.co
+      SSL_POLICY: Mozilla-Intermediate
+      HTTPS_METHOD: redirect
+      GITLAB_OMNIBUS_CONFIG:
+        external_url 'https://gitlab.cr.imson.co';
+        mattermost_external_url 'https://im.cr.imson.co';
+        letsencrypt['enable'] = false;
+        nginx['listen_port'] = 80;
+        nginx['listen_https'] = false;
+        mattermost_nginx['listen_port'] = 80;
+        mattermost_nginx['listen_https'] = false;
+        mattermost['gitlab_auth_endpoint'] = 'http://gitlab.cr.imson.co/oauth/authorize';
+        mattermost['gitlab_token_endpoint'] = 'http://gitlab.cr.imson.co/oauth/token';
+        mattermost['gitlab_user_api_endpoint'] = 'http://gitlab.cr.imson.co/api/v4/user';
+    networks:
+      crimson:
+        aliases:
+          - gitlab
+    ports:
+      - "80"
+      # gitlab needs to be the only one on port 22
+      # if this isn't the case, change the left port to match
+      #   the gitlab_rails['gitlab_shell_ssh_port'] configuration directive
+      - "0.0.0.0:22:22"
+    volumes:
+      - type: volume
+        source: gitlab_config
+        target: /etc/gitlab
+      - type: volume
+        source: gitlab_logs
+        target: /var/log/gitlab
+      - type: volume
+        source: gitlab_data
+        target: /var/opt/gitlab
+
+  jenkins:
+    container_name: jenkins
+    image: docker.cr.imson.co/jenkins-docker:latest
+    restart: unless-stopped
+    stop_grace_period: 2m
+    logging:
+      driver: "json-file"
+      options:
+        max-file: "10"
+        max-size: "10m"
+    hostname: jenkins.cr.imson.co
+    environment:
+      VIRTUAL_PORT: "8080"
+      VIRTUAL_HOST: jenkins.cr.imson.co
+      CERT_NAME: jenkins.cr.imson.co
+      SSL_POLICY: Mozilla-Intermediate
+      HTTPS_METHOD: redirect
+      JAVA_OPTS: -Duser.timezone=America/Chicago
+    networks:
+      crimson:
+        aliases:
+          - jenkins
+    ports:
+      - "8080"
+      # for jenkins slaves
+      - "0.0.0.0:50000:50000"
+    volumes:
+      - type: volume
+        source: jenkins_home
+        target: /var/jenkins_home
+      - type: bind
+        source: /var/run/docker.sock
+        target: /var/run/docker.sock
+    depends_on:
+      - gitlab
+
+  registry:
+    container_name: registry
+    image: registry:2
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-file: "10"
+        max-size: "10m"
+    hostname: docker.cr.imson.co
+    environment:
+      VIRTUAL_PORT: "5000"
+      VIRTUAL_HOST: docker.cr.imson.co
+      CERT_NAME: docker.cr.imson.co
+      SSL_POLICY: Mozilla-Intermediate
+      HTTPS_METHOD: redirect
+    networks:
+      crimson:
+        aliases:
+          - docker
+    ports:
+      - "5000"
+    volumes:
+      - type: bind
+        source: /srv/registry/config.yml
+        target: /etc/docker/registry/config.yml
+        read_only: true
+      - type: volume
+        source: registry_data
+        target: /var/lib/registry
+
+  registry_ui:
+    container_name: registry_ui
+    image: joxit/docker-registry-ui:static
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-file: "10"
+        max-size: "10m"
+    hostname: dockerui.cr.imson.co
+    environment:
+      VIRTUAL_HOST: dockerui.cr.imson.co
+      CERT_NAME: dockerui.cr.imson.co
+      SSL_POLICY: Mozilla-Intermediate
+      HTTPS_METHOD: redirect
+      # docker-registry-ui specific env vars...
+      REGISTRY_URL: http://docker:5000
+      DELETE_IMAGES: "true"
+      REGISTRY_TITLE: "cr.imson.co docker registry"
+      PULL_URL: https://docker.cr.imson.co/
+    networks:
+      crimson:
+        aliases:
+          - dockerui
+    ports:
+      - "80"
+    volumes:
+      - type: bind
+        source: /srv/registry/config.yml
+        target: /etc/docker/registry/config.yml
+        read_only: true
+    # healthcheck:
+    #   test: curl -sSLf http://localhost/ >/dev/null || exit 1
+    #   start_period: 30s
+    #   interval: 1m
+    #   retries: 3
+    depends_on:
+      - registry
+
+  mariadb:
+    container_name: mariadb
+    image: mariadb:10.2
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-file: "10"
+        max-size: "10m"
+    command: --character-set-server=utf8 --collation-server=utf8_unicode_ci
+    environment:
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/mysql_root_password
+      MYSQL_DATABASE: redbooru
+      MYSQL_USER: redbooru
+      MYSQL_PASSWORD_FILE: /run/secrets/mysql_password
+    networks:
+      crimson:
+        aliases:
+          - db
+    ports:
+      - "0.0.0.0:3306:3306"
+    volumes:
+      - type: volume
+        source: mariadb_data
+        target: /var/lib/mysql
+    healthcheck:
+      test: mysqladmin ping --silent
+      start_period: 1m
+      interval: 1m
+      retries: 3
+    secrets:
+      - mysql_root_password
+      - mysql_password
+
+  gitlab_runner:
+    container_name: gitlab_runner
+    image: gitlab/gitlab-runner:latest
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-file: "10"
+        max-size: "10m"
+    networks:
+      crimson:
+        aliases:
+          - glrunner
+    volumes:
+      - type: volume
+        source: gitlab_runner_config
+        target: /etc/gitlab-runner
+      - type: bind
+        source: /var/run/docker.sock
+        target: /var/run/docker.sock
