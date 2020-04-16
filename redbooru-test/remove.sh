@@ -22,21 +22,25 @@ if [ "$EUID" -ne 0 ]; then
   exit 1
 fi
 
-for DEPLOY_FILE in ${FILES[@]}; do
-  echo :: deploying $DIR/$DEPLOY_FILE
-  cp $DIR/$DEPLOY_FILE $DEPLOY_PATH/$DEPLOY_FILE
+echo :: this script will remove the redbooru environment
+read -p "   proceed? [y/N] " -n 1 -r
+echo ""
 
-  if [ ${DEPLOY_FILE: -3} == '.sh' ]; then
-    chmod 770 $DEPLOY_PATH/$DEPLOY_FILE
-  else
-    chmod 660 $DEPLOY_PATH/$DEPLOY_FILE
-  fi
+if [[ $REPLY =~ ^[Yy]$ ]]; then
+  echo :: ensuring redbooru environment is stopped
+  $DEPLOY_PATH/stop.sh
 
-  chown root:docker $DEPLOY_PATH/$DEPLOY_FILE
-done
+  for DEPLOY_FILE in ${FILES[@]}; do
+    echo :: removing $DEPLOY_PATH/$DEPLOY_FILE
+    rm -f $DEPLOY_PATH/$DEPLOY_FILE
+  done
 
-for DEPLOY_HOOK in ${HOOKS[@]}; do
-  cp $DIR/docker-hooks/$DEPLOY_HOOK $DOCKER_HOOK_PATH/$DEPLOY_HOOK
-  chmod 770 $DOCKER_HOOK_PATH/$DEPLOY_HOOK
-  chown root:docker $DOCKER_HOOK_PATH/$DEPLOY_HOOK
-done
+  for DEPLOY_HOOK in ${HOOKS[@]}; do
+    echo :: removing $DOCKER_HOOK_PATH/$DEPLOY_HOOK
+    rm -f $DOCKER_HOOK_PATH/$DEPLOY_HOOK
+  done
+
+  echo :: removal completed
+else
+    echo !! aborting
+fi

@@ -14,6 +14,7 @@ if [ "$EUID" -ne 0 ]; then
   exit 1
 fi
 
+set +o nounset
 if [ -z "$1" ]; then
     echo usage: $0 \<subdomain\>
     echo note: subdomain should not include the domain itself.
@@ -21,6 +22,8 @@ if [ -z "$1" ]; then
 fi
 
 SUBDOMAIN=$1
+set -o nounset
+
 DOMAIN=$SUBDOMAIN.cr.imson.co
 MAX_RETRIES=5
 

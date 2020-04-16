@@ -16,15 +16,23 @@ volumes:
   gitlab_config:
   gitlab_logs:
   gitlab_data:
-  mariadb_data:
+  # mariadb_data:
   registry_data:
-  gitlab_runner_config:
+  nextcloud_root:
+  nextcloud_apps:
+  nextcloud_config:
+  nextcloud_data:
+  nextcloud_mariadb_data:
 
 secrets:
-  mysql_root_password:
-    file: ./mysql_root_password
-  mysql_password:
-    file: ./mysql_password
+  nextcloud_mysql_root_password:
+    file: ./nextcloud_mysql_root_password
+  nextcloud_mysql_password:
+    file: ./nextcloud_mysql_password
+  # mysql_root_password:
+  #   file: ./mysql_root_password
+  # mysql_password:
+  #   file: ./mysql_password
 
 services:
   nginx-proxy:
@@ -77,8 +85,6 @@ services:
       HTTPS_METHOD: redirect
     networks:
       crimson:
-    ports:
-      - "80"
     volumes:
       - type: bind
         source: /srv/html
@@ -121,7 +127,6 @@ services:
         aliases:
           - gitlab
     ports:
-      - "80"
       # gitlab needs to be the only one on port 22
       # if this isn't the case, change the left port to match
       #   the gitlab_rails['gitlab_shell_ssh_port'] configuration directive
@@ -160,7 +165,6 @@ services:
         aliases:
           - jenkins
     ports:
-      - "8080"
       # for jenkins slaves
       - "0.0.0.0:50000:50000"
     volumes:
@@ -193,8 +197,6 @@ services:
       crimson:
         aliases:
           - docker
-    ports:
-      - "5000"
     volumes:
       - type: bind
         source: /srv/registry/config.yml
@@ -243,30 +245,69 @@ services:
     depends_on:
       - registry
 
-  mariadb:
-    container_name: mariadb
-    image: mariadb:10.2
+  nextcloud_app:
+    container_name: nextcloud_app
+    image: docker.cr.imson.co/nextcloud-custom:18-fpm
     restart: unless-stopped
     logging:
       driver: "json-file"
       options:
         max-file: "10"
         max-size: "10m"
-    command: --character-set-server=utf8 --collation-server=utf8_unicode_ci
+    hostname: cloud.cr.imson.co
     environment:
-      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/mysql_root_password
-      MYSQL_DATABASE: redbooru
-      MYSQL_USER: redbooru
-      MYSQL_PASSWORD_FILE: /run/secrets/mysql_password
+      NEXTCLOUD_TRUSTED_DOMAINS: cloud.cr.imson.co
+      NEXTCLOUD_OVERWRITEPROTOCOL: https
+      MYSQL_HOST: nextcloud-db
+      MYSQL_DATABASE: nextcloud
+      MYSQL_USER: nextcloud
+      MYSQL_PASSWORD_FILE: /run/secrets/nextcloud_mysql_password
     networks:
       crimson:
         aliases:
-          - db
+          - nextcloud-app
+    volumes:
+      - type: volume
+        source: nextcloud_root
+        target: /var/www/html
+      - type: volume
+        source: nextcloud_apps
+        target: /var/www/html/custom_apps
+      - type: volume
+        source: nextcloud_config
+        target: /var/www/html/config
+      - type: volume
+        source: nextcloud_data
+        target: /var/www/html/data
+    secrets:
+      - nextcloud_mysql_password
+    depends_on:
+      - nextcloud_db
+
+  nextcloud_db:
+    container_name: nextcloud_db
+    image: mariadb:10.5
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-file: "10"
+        max-size: "10m"
+    command: --character-set-server=utf8 --collation-server=utf8_unicode_ci --transaction-isolation=READ-COMMITTED --binlog-format=ROW
+    environment:
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/nextcloud_mysql_root_password
+      MYSQL_DATABASE: nextcloud
+      MYSQL_USER: nextcloud
+      MYSQL_PASSWORD_FILE: /run/secrets/nextcloud_mysql_password
+    networks:
+      crimson:
+        aliases:
+          - nextcloud-db
     ports:
       - "0.0.0.0:3306:3306"
     volumes:
       - type: volume
-        source: mariadb_data
+        source: nextcloud_mariadb_data
         target: /var/lib/mysql
     healthcheck:
       test: mysqladmin ping --silent
@@ -274,26 +315,72 @@ services:
       interval: 1m
       retries: 3
     secrets:
-      - mysql_root_password
-      - mysql_password
+      - nextcloud_mysql_root_password
+      - nextcloud_mysql_password
 
-  gitlab_runner:
-    container_name: gitlab_runner
-    image: gitlab/gitlab-runner:latest
+  nextcloud_nginx_translator:
+    container_name: nextcloud_nginx
+    image: docker.cr.imson.co/nextcloud-nginx-translator:latest
     restart: unless-stopped
     logging:
       driver: "json-file"
       options:
         max-file: "10"
         max-size: "10m"
+    hostname: cloud.cr.imson.co
+    environment:
+      VIRTUAL_HOST: cloud.cr.imson.co
+      CERT_NAME: cloud.cr.imson.co
+      SSL_POLICY: Mozilla-Intermediate
+      HTTPS_METHOD: redirect
+      MYSQL_HOST: nextcloud-db
+      MYSQL_DATABASE: nextcloud
+      MYSQL_USER: nextcloud
+      MYSQL_PASSWORD_FILE: /run/secrets/nextcloud_mysql_password
     networks:
       crimson:
         aliases:
-          - glrunner
+          - cloud
     volumes:
       - type: volume
-        source: gitlab_runner_config
-        target: /etc/gitlab-runner
-      - type: bind
-        source: /var/run/docker.sock
-        target: /var/run/docker.sock
+        source: nextcloud_root
+        target: /var/www/html
+        read_only: true
+    depends_on:
+      - nextcloud_app
+
+  # disabling the mariadb database for redbooru for the time being while
+  #   work on the project is suspended.
+  # mariadb:
+  #   container_name: mariadb
+  #   image: mariadb:10.2
+  #   restart: unless-stopped
+  #   logging:
+  #     driver: "json-file"
+  #     options:
+  #       max-file: "10"
+  #       max-size: "10m"
+  #   command: --character-set-server=utf8 --collation-server=utf8_unicode_ci
+  #   environment:
+  #     MYSQL_ROOT_PASSWORD_FILE: /run/secrets/mysql_root_password
+  #     MYSQL_DATABASE: redbooru
+  #     MYSQL_USER: redbooru
+  #     MYSQL_PASSWORD_FILE: /run/secrets/mysql_password
+  #   networks:
+  #     crimson:
+  #       aliases:
+  #         - db
+  #   ports:
+  #     - "0.0.0.0:3306:3306"
+  #   volumes:
+  #     - type: volume
+  #       source: mariadb_data
+  #       target: /var/lib/mysql
+  #   healthcheck:
+  #     test: mysqladmin ping --silent
+  #     start_period: 1m
+  #     interval: 1m
+  #     retries: 3
+  #   secrets:
+  #     - mysql_root_password
+  #     - mysql_password
