@@ -2,14 +2,11 @@
 
 This service handles regularly creating backups of Docker volumes.
 
-## requirements
-
-This service requires samba by default, but can copy the backups to anywhere on the filesystem.
-Creating a samba credentials file at `/etc/samba/credentials/backup` is required to use samba.
+It is highly recommended to use the external network filesystems in conjunction with this service.
 
 ## `systemd/`
 
-`systemd/` contains `volume-backup.timer`, `volume-backup.service` (a timer definition file, a service file, and a mount definition file respectively) so that systemd will run volume-backup regularly.
+`systemd/` contains `volume-backup.timer` and `volume-backup.service` (a timer definition file and a service file respectively) so that systemd will run volume-backup regularly.
 These should be placed in `/lib/systemd/system/`.
 
 ## `bin/`

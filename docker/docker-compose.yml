@@ -23,6 +23,7 @@ volumes:
   nextcloud_config:
   nextcloud_data:
   nextcloud_mariadb_data:
+  nexus_data:
 
 secrets:
   nextcloud_mysql_root_password:
@@ -348,6 +349,34 @@ services:
         read_only: true
     depends_on:
       - nextcloud_app
+
+  nexus:
+    container_name: nexus
+    image: docker.cr.imson.co/nexus-custom:3.22.1
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-file: "10"
+        max-size: "10m"
+    hostname: nexus.cr.imson.co
+    environment:
+      VIRTUAL_HOST: nexus.cr.imson.co
+      CERT_NAME: nexus.cr.imson.co
+      SSL_POLICY: Mozilla-Intermediate
+      HTTPS_METHOD: redirect
+    networks:
+      crimson:
+        aliases:
+          - nexus
+    volumes:
+      - type: bind
+        source: /srv/nexus/gitlabauth.properties
+        target: /opt/sonatype/nexus/etc/gitlabauth.properties
+        read_only: true
+      - type: volume
+        source: nexus_data
+        target: /nexus-data
 
   # disabling the mariadb database for redbooru for the time being while
   #   work on the project is suspended.

@@ -1,0 +1,9 @@
+[Unit]
+Description=Verifies that network fileshares are mounted.
+
+[Timer]
+OnBootSec=15s
+OnUnitActiveSec=1h
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,8 @@
+[Unit]
+Description=Verifies that network fileshares are mounted.
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/mount-check.sh

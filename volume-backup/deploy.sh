@@ -15,8 +15,8 @@ DEPLOY_PATH=/etc/systemd/system
 DOCKER_HOOK_PATH=/srv/docker/hooks
 
 FILES=(volume-backup.sh)
-UNITS=(mnt-backup.mount volume-backup.service volume-backup.timer)
-SYSTEMD_UNIT_CHECKS=(mnt-backup.mount volume-backup.timer)
+UNITS=(volume-backup.service volume-backup.timer)
+SYSTEMD_UNIT_CHECKS=(volume-backup.timer)
 DIRS=($DOCKER_HOOK_PATH/cleanup-backup $DOCKER_HOOK_PATH/move-backup $DOCKER_HOOK_PATH/backup-volume $DOCKER_HOOK_PATH/backup-image)
 
 if [ "$EUID" -ne 0 ]; then
@@ -52,10 +52,6 @@ done
 
 echo :: reloading systemd unit files...
 systemctl daemon-reload > /dev/null 2>&1
-
-if [ ! -f /etc/samba/credentials/backup ]; then
-  echo !! the /etc/samba/credentials/backup file must be manually created and populated!
-fi
 
 for SYSTEMD_UNIT in ${SYSTEMD_UNIT_CHECKS[@]}; do
   if ! systemctl list-unit-files --state=enabled | grep $SYSTEMD_UNIT > /dev/null 2>&1; then
