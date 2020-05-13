@@ -1,0 +1,23 @@
+Style/CommentAnnotation:
+  Enabled: false
+
+Layout/EndOfLine:
+  Enabled: false
+
+Layout/TrailingBlankLines:
+  Enabled: false
+
+Style/WordArray:
+  EnforcedStyle: brackets
+
+Naming/FileName:
+  Enabled: false
+
+Style/TrailingCommaInArrayLiteral:
+  Enabled: false
+
+Style/FrozenStringLiteralComment:
+  Enabled: false
+
+Metrics/LineLength:
+  Enabled: false

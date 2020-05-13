@@ -3,3 +3,4 @@ docker/mysql_password
 docker/postgres_password
 redbooru-test/mysql_root_password
 redbooru-test/mysql_password
+secrets.json

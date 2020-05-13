@@ -9,18 +9,15 @@ pipeline {
   }
   post {
     failure {
-      mattermostSend color: 'danger', message: "Build failed: [${env.JOB_NAME}${env.BUILD_DISPLAY_NAME}](${env.BUILD_URL}) - @channel"
       updateGitlabCommitStatus name: 'jenkins', state: 'failed'
     }
     unstable {
-      mattermostSend color: 'warning', message: "Build unstable: [${env.JOB_NAME}${env.BUILD_DISPLAY_NAME}](${env.BUILD_URL}) - @channel"
       updateGitlabCommitStatus name: 'jenkins', state: 'failed'
     }
     aborted {
       updateGitlabCommitStatus name: 'jenkins', state: 'canceled'
     }
     success {
-      mattermostSend color: 'good', message: "Build completed: [${env.JOB_NAME}${env.BUILD_DISPLAY_NAME}](${env.BUILD_URL})"
       updateGitlabCommitStatus name: 'jenkins', state: 'success'
     }
     always {
@@ -28,7 +25,9 @@ pipeline {
     }
   }
   agent {
-    label 'dockerhost'
+    docker {
+      image 'docker.cr.imson.co/homelab-ci'
+    }
   }
   environment {
     CI = 'true'
@@ -50,6 +49,15 @@ pipeline {
         stage('docker-compose syntax checks') {
           steps {
             sh 'find . -type f -iname "*docker-compose.yml" -print0 | xargs -n 1 -0 -I \'{}\' docker-compose -f {} config -q'
+          }
+        }
+        stage('rubocop checks') {
+          steps {
+            sh """
+              rubocop \
+                -c ${env.WORKSPACE}/cookbooks/.rubocop.yml \
+                --cache false
+            """.stripIndent()
           }
         }
       }
