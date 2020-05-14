@@ -12,7 +12,7 @@ DIR="$(dirname "$(readlink -f "$0")")"
 
 # todo: make the mounts list dynamic
 
-MOUNTS=(mnt-backup.mount mnt-nexus.mount)
+MOUNTS=(mnt-backup.mount)
 
 for MOUNT_UNIT in ${MOUNTS[@]}; do
   echo :: checking $MOUNT_UNIT
