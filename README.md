@@ -38,12 +38,6 @@ certpackage service which bundles up live LetsEncrypt certificates for replicati
 
 dnsmasq configuration files for a VPN and LAN environment to better enable access to home lab provided services.
 
-#### `redbooru-test/`
-
-##### **DEPRECATED** - to be externalized into another repository if kept
-
-docker-compose based configuration for the redbooru integration environment.
-
 #### `subdomains/`
 
 scripts for managing the creation and cleanup of domains on the external server used with LetsEncrypt.
