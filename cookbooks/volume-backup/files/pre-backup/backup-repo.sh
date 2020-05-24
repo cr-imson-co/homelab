@@ -18,7 +18,7 @@ echo :: backing up homelab repo...
 # note: using -u because we need git to create the path, not mktemp...
 TEMP_REPO_PATH=$(mktemp -d -p $BACKUP_STAGING_PATH/)
 
-pushd $BACKUP_STAGING_PATH/$TEMP_REPO_PATH/ > /dev/null
+pushd $TEMP_REPO_PATH/ > /dev/null
 
 git clone --depth 1 $BACKUP_GIT_REPO .
 
