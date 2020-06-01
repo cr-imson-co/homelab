@@ -1,0 +1,6 @@
+[Unit]
+Description=Failure emergency notification service.
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/failure_notification.sh %i

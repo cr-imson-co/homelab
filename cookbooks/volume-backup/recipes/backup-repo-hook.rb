@@ -8,7 +8,7 @@
 
 cookbook_file "#{node['configs']['docker']['hook_path']}/pre-backup/backup-repo.sh" do
   source 'pre-backup/backup-repo.sh'
-  mode '0750'
+  mode '0740'
   owner 'root'
   group 'docker'
   action :create

@@ -2,6 +2,7 @@
 Description=Regular backups for Docker volumes.
 After=network-online.target
 Wants=network-online.target
+OnFailure=failure-notification@volume-backup.service
 
 [Service]
 Type=oneshot
