@@ -1,6 +1,8 @@
-docker/mysql_root_password
-docker/mysql_password
-docker/postgres_password
-redbooru-test/mysql_root_password
-redbooru-test/mysql_password
+# chef-specific files/dirs to ignore
+chef-client-running.pid
+chef-stacktrace.out
+chef_guid
+local-mode-cache/
+nodes/
+
 secrets.json
