@@ -6,7 +6,7 @@
 # @license MIT license (see /LICENSE for details)
 #
 
-mount_name = 'backup'
+mount_name = 'nextcloud'
 
 execute 'systemd_daemon_reload' do
   command 'systemctl daemon-reload'
@@ -32,8 +32,8 @@ template "#{node['configs']['mount']['samba_credentials_path']}/#{mount_name}" d
   sensitive true
   action :create
   variables(
-    username: node['secrets']['samba_backup_username'],
-    password: node['secrets']['samba_backup_password']
+    username: node['secrets']['samba_nextcloud_username'],
+    password: node['secrets']['samba_nextcloud_password']
   )
 end
 
@@ -47,7 +47,7 @@ template "#{node['configs']['global']['systemd_unit_path']}/mnt-#{mount_name}.mo
   notifies :restart, "service[mnt-#{mount_name}.mount]", :delayed
   variables(
     mount_name: mount_name,
-    mount_options: ''
+    mount_options: ',uid=33,gid=0,file_mode=0770,dir_mode=0770'
   )
 end
 

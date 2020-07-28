@@ -276,9 +276,12 @@ services:
       - type: volume
         source: nextcloud_config
         target: /var/www/html/config
+      - type: bind
+        source: /mnt/nextcloud
+        target: /var/www/html/data
       - type: volume
         source: nextcloud_data
-        target: /var/www/html/data
+        target: /mnt/data
     secrets:
       - nextcloud_mysql_password
     depends_on:

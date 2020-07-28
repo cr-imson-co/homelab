@@ -6,7 +6,7 @@ Wants=network-online.target
 [Mount]
 What=//<%= node['configs']['mount']['target_server'] %>/<%= @mount_name %>
 Where=/mnt/<%= @mount_name %>
-Options=credentials=<%= node['configs']['mount']['samba_credentials_path'] %>/<%= @mount_name %>,iocharset=utf8,rw,x-systemd.automount
+Options=credentials=<%= node['configs']['mount']['samba_credentials_path'] %>/<%= @mount_name %>,iocharset=utf8,rw,x-systemd.automount<%= @mount_options %>
 Type=cifs
 TimeoutSec=30
 
