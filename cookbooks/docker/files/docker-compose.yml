@@ -193,6 +193,7 @@ services:
       CERT_NAME: docker.cr.imson.co
       SSL_POLICY: Mozilla-Intermediate
       HTTPS_METHOD: redirect
+      REGISTRY_STORAGE_DELETE_ENABLED: "true"
     networks:
       crimson:
         aliases:
@@ -247,7 +248,7 @@ services:
 
   nextcloud_app:
     container_name: nextcloud_app
-    image: docker.cr.imson.co/nextcloud-custom:18-fpm
+    image: docker.cr.imson.co/nextcloud-custom:19-fpm
     restart: unless-stopped
     logging:
       driver: "json-file"
