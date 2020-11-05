@@ -1,0 +1,8 @@
+[Unit]
+Description=Warns if not enough space remains on specific filesystems.
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/check-space-remaining.sh
