@@ -248,7 +248,7 @@ services:
 
   nextcloud_app:
     container_name: nextcloud_app
-    image: docker.cr.imson.co/nextcloud-custom:19-fpm
+    image: docker.cr.imson.co/nextcloud-custom:20-fpm
     restart: unless-stopped
     logging:
       driver: "json-file"
