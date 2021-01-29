@@ -16,6 +16,7 @@ end
 vhost_files = [
   'cloud.cr.imson.co',
   'docker.cr.imson.co',
+  'gitlab.cr.imson.co',
 ]
 vhost_files.each do |vhost_file|
   cookbook_file "#{node['configs']['nginx']['vhost_path']}/#{vhost_file}" do

@@ -117,6 +117,7 @@ services:
         letsencrypt['enable'] = false;
         nginx['listen_port'] = 80;
         nginx['listen_https'] = false;
+        nginx['client_max_body_size'] = '100m';
         mattermost_nginx['listen_port'] = 80;
         mattermost_nginx['listen_https'] = false;
         mattermost['gitlab_auth_endpoint'] = 'http://gitlab.cr.imson.co/oauth/authorize';
