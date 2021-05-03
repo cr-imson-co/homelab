@@ -210,7 +210,7 @@ services:
 
   registry_ui:
     container_name: registry_ui
-    image: joxit/docker-registry-ui:static
+    image: joxit/docker-registry-ui:latest
     restart: unless-stopped
     logging:
       driver: "json-file"
@@ -224,7 +224,8 @@ services:
       SSL_POLICY: Mozilla-Intermediate
       HTTPS_METHOD: redirect
       # docker-registry-ui specific env vars...
-      REGISTRY_URL: http://docker:5000
+      NGINX_PROXY_PASS_URL: http://docker:5000
+      SINGLE_REGISTRY: "true"
       DELETE_IMAGES: "true"
       REGISTRY_TITLE: "cr.imson.co docker registry"
       PULL_URL: https://docker.cr.imson.co/
