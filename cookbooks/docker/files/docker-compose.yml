@@ -91,6 +91,30 @@ services:
     #   interval: 1m
     #   retries: 3
 
+  homer:
+    container_name: homer
+    image: b4bz/homer:latest
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-file: "10"
+        max-size: "10m"
+    hostname: hub.cr.imson.co
+    environment:
+      VIRTUAL_PORT: "8080"
+      VIRTUAL_HOST: hub.cr.imson.co
+      CERT_NAME: cr.imson.co
+      SSL_POLICY: Mozilla-Intermediate
+      HTTPS_METHOD: redirect
+    networks:
+      crimson:
+    volumes:
+      - type: bind
+        source: /srv/homer
+        target: /www/assets
+        read_only: true
+
   gitlab:
     container_name: gitlab
     image: gitlab/gitlab-ce:latest

@@ -46,5 +46,13 @@ cookbook_file "#{node['configs']['docker']['scripts_path']}/update.sh" do
   action :create
 end
 
+cookbook_file "#{node['configs']['docker']['scripts_path']}/hup.sh" do
+  source 'hup.sh'
+  owner 'root'
+  group 'docker'
+  mode '0750'
+  action :create
+end
+
 # todo: write secrets files for the various database passwords
 # files should not contain newlines!

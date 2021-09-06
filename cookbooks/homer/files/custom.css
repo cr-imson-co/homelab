@@ -1,0 +1,20 @@
+a {
+  color: #D33232;
+  cursor: pointer;
+}
+
+body #app.is-light .search-bar .search-label::before {
+  color: #363636
+}
+
+body #app.is-dark .search-bar .search-label::before {
+  color: #ddd
+}
+
+body #app.is-light .tag strong.tag-text {
+  color: #363636
+}
+
+body #app.is-dark .tag strong.tag-text {
+  color: #ddd
+}
