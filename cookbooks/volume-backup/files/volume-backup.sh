@@ -76,7 +76,7 @@ for _VOLUME in $VOLUMES; do
   VOLUME=${DOCKER_PROJECT_NAME}_${_VOLUME}
 
   echo :: backing up $VOLUME to staging directory
-  docker run -v $VOLUME:/volume -v $BACKUP_STAGING_PATH:/backup --rm loomchild/volume-backup backup $VOLUME
+  docker run -v $VOLUME:/volume -v $BACKUP_STAGING_PATH:/backup --rm --log-driver none loomchild/volume-backup backup $VOLUME
 
   hook backup-volume $BACKUP_STAGING_PATH $VOLUME
 done
