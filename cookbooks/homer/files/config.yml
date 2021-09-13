@@ -118,3 +118,8 @@ services:
         tag: "dev"
         url: "https://dockerui.cr.imson.co"
         target: "_blank"
+      - name: "Portainer"
+        icon: "fas fa-box"
+        tag: "dev"
+        url: "https://portainer.cr.imson.co"
+        target: "_blank"

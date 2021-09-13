@@ -22,12 +22,15 @@ volumes:
   nextcloud_config:
   nextcloud_data:
   nextcloud_mariadb_data:
+  portainer_data:
 
 secrets:
   nextcloud_mysql_root_password:
     file: ./nextcloud_mysql_root_password
   nextcloud_mysql_password:
     file: ./nextcloud_mysql_password
+  portainer_admin_password:
+    file: ./portainer_admin_password
 
 services:
   nginx-proxy:
@@ -353,10 +356,10 @@ services:
       CERT_NAME: cr.imson.co
       SSL_POLICY: Mozilla-Intermediate
       HTTPS_METHOD: redirect
-      MYSQL_HOST: nextcloud-db
-      MYSQL_DATABASE: nextcloud
-      MYSQL_USER: nextcloud
-      MYSQL_PASSWORD_FILE: /run/secrets/nextcloud_mysql_password
+      #MYSQL_HOST: nextcloud-db
+      #MYSQL_DATABASE: nextcloud
+      #MYSQL_USER: nextcloud
+      #MYSQL_PASSWORD_FILE: /run/secrets/nextcloud_mysql_password
     networks:
       crimson:
         aliases:
@@ -368,3 +371,35 @@ services:
         read_only: true
     depends_on:
       - nextcloud_app
+
+  portainer:
+    container_name: portainer
+    image: portainer/portainer-ce:2.6.3
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-file: "10"
+        max-size: "10m"
+    hostname: portainer.cr.imson.co
+    environment:
+      VIRTUAL_HOST: portainer.cr.imson.co
+      VIRTUAL_PORT: 9000
+      CERT_NAME: cr.imson.co
+      SSL_POLICY: Mozilla-Intermediate
+      HTTPS_METHOD: redirect
+    networks:
+      crimson:
+        aliases:
+          - portainer
+    ports:
+      - "0.0.0.0:8000:8000"
+    volumes:
+      - type: volume
+        source: portainer_data
+        target: /data
+      - type: bind
+        source: /var/run/docker.sock
+        target: /var/run/docker.sock
+    secrets:
+      - portainer_admin_password
