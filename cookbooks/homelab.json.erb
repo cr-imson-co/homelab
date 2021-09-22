@@ -54,6 +54,9 @@ JSON.parse(File.read(ENV['SECRETS_FILE'])).merge({
     },
     homer: {
       root_path: '/srv/homer',
+    },
+    homelab_proxy: {
+      config_path: '/srv/proxy'
     }
   }
 }).to_json

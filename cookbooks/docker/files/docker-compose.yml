@@ -65,6 +65,11 @@ services:
       - type: bind
         source: /etc/nginx/htpasswd
         target: /etc/nginx/htpasswd
+    healthcheck:
+      test: service nginx status >/dev/null || exit 1
+      start_period: 30s
+      interval: 1m
+      retries: 3
 
   nginx:
     container_name: landing_page
@@ -88,8 +93,37 @@ services:
         source: /srv/html
         target: /usr/share/nginx/html
         read_only: true
+    healthcheck:
+      test: curl -IsSLf http://localhost/ >/dev/null || exit 1
+      start_period: 30s
+      interval: 1m
+      retries: 3
+
+  homelab_proxy:
+    container_name: homelab_proxy
+    image: nginx:alpine
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-file: "10"
+        max-size: "10m"
+    #hostname: cr.imson.co
+    environment:
+      VIRTUAL_HOST: "nas.cr.imson.co,network.cr.imson.co,dns.cr.imson.co"
+      VIRTUAL_PORT: "80"
+      CERT_NAME: cr.imson.co
+      SSL_POLICY: Mozilla-Intermediate
+      HTTPS_METHOD: redirect
+    networks:
+      crimson:
+    volumes:
+      - type: bind
+        source: /srv/proxy
+        target: /etc/nginx/conf.d
+        read_only: true
     # healthcheck:
-    #   test: curl -sSLf http://localhost/ >/dev/null || exit 1
+    #   test: curl -IsSLf http://localhost/ >/dev/null || exit 1
     #   start_period: 30s
     #   interval: 1m
     #   retries: 3
@@ -117,6 +151,11 @@ services:
         source: /srv/homer
         target: /www/assets
         read_only: true
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://localhost:8080/ || exit 1
+      start_period: 30s
+      interval: 1m
+      retries: 3
 
   gitlab:
     container_name: gitlab
@@ -224,6 +263,11 @@ services:
       - type: volume
         source: registry_data
         target: /var/lib/registry
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://localhost:5000/ || exit 1
+      start_period: 30s
+      interval: 1m
+      retries: 3
 
   registry_ui:
     container_name: registry_ui
@@ -257,11 +301,11 @@ services:
         source: /srv/registry/config.yml
         target: /etc/docker/registry/config.yml
         read_only: true
-    # healthcheck:
-    #   test: curl -sSLf http://localhost/ >/dev/null || exit 1
-    #   start_period: 30s
-    #   interval: 1m
-    #   retries: 3
+    healthcheck:
+      test: curl -IsSLf http://localhost/ >/dev/null || exit 1
+      start_period: 30s
+      interval: 1m
+      retries: 3
     depends_on:
       - registry
 
@@ -356,10 +400,6 @@ services:
       CERT_NAME: cr.imson.co
       SSL_POLICY: Mozilla-Intermediate
       HTTPS_METHOD: redirect
-      #MYSQL_HOST: nextcloud-db
-      #MYSQL_DATABASE: nextcloud
-      #MYSQL_USER: nextcloud
-      #MYSQL_PASSWORD_FILE: /run/secrets/nextcloud_mysql_password
     networks:
       crimson:
         aliases:
@@ -369,6 +409,11 @@ services:
         source: nextcloud_root
         target: /var/www/html
         read_only: true
+    healthcheck:
+      test: curl -IsLf http://localhost/login >/dev/null || exit 1
+      start_period: 30s
+      interval: 1m
+      retries: 3
     depends_on:
       - nextcloud_app
 
