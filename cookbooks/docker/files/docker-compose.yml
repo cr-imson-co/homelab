@@ -169,7 +169,7 @@ services:
         max-size: "10m"
     hostname: gitlab.cr.imson.co
     environment:
-      VIRTUAL_HOST: gitlab.cr.imson.co
+      VIRTUAL_HOST: gitlab.cr.imson.co,containers.cr.imson.co
       CERT_NAME: cr.imson.co
       SSL_POLICY: Mozilla-Intermediate
       HTTPS_METHOD: redirect
@@ -179,6 +179,17 @@ services:
         nginx['listen_port'] = 80;
         nginx['listen_https'] = false;
         nginx['client_max_body_size'] = '100m';
+        registry['enable'] = true;
+        registry_external_url 'https://containers.cr.imson.co';
+        registry_nginx['listen_port'] = 80;
+        registry_nginx['listen_https'] = false;
+        gitlab_rails['registry_path'] = '/mnt/registry/containers';
+        gitlab_rails['dependency_proxy_enabled'] = true;
+        gitlab_rails['dependency_proxy_storage_path'] = '/mnt/registry/dependencies';
+        gitlab_rails['packages_enabled'] = true;
+        gitlab_rails['packages_storage_path'] = '/mnt/registry/packages';
+        gitlab_rails['lfs_enabled'] = true;
+        gitlab_rails['lfs_storage_path'] = '/mnt/registry/lfs';
     networks:
       crimson:
         aliases:
@@ -198,6 +209,9 @@ services:
       - type: volume
         source: gitlab_data
         target: /var/opt/gitlab
+      - type: bind
+        source: /mnt/registry
+        target: /mnt/registry
 
   jenkins:
     container_name: jenkins
