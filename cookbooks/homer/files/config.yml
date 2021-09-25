@@ -105,6 +105,7 @@ services:
         url: "https://jenkins.cr.imson.co"
         target: "_blank"
       - name: "Docker Registry"
+        subtitle: "Legacy Registry"
         icon: "fab fa-docker"
         tag: "dev"
         url: "https://dockerui.cr.imson.co"

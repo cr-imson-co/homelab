@@ -18,9 +18,9 @@ service "mnt-#{mount_name}.mount" do
 end
 
 directory "#{node['configs']['global']['mount_path']}/#{mount_name}" do
-  mode '0770'
-  owner 'www-data'
-  group 'root'
+  mode '0700'
+  owner 998
+  group 998
   action :create
 end
 
