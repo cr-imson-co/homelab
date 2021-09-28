@@ -86,10 +86,12 @@ for SERVICE in $SERVICES; do
   IMAGE_ID=${SERVICES_TO_IMAGE_IDS[$SERVICE]}
   SHORT_IMAGE_ID=${IMAGE_ID:0:9}
 
-  echo :: backing up $SERVICE image \($SHORT_IMAGE_ID\)
-  docker save $IMAGE_ID | bzip2 > $BACKUP_STAGING_PATH/image_$IMAGE_ID.tar.bz2
+  if [[ ! -f $BACKUP_STAGING_PATH/image_$IMAGE_ID.tar.bz2 ]]; then
+    echo :: backing up $SERVICE image \($SHORT_IMAGE_ID\)
+    docker save $IMAGE_ID | bzip2 > $BACKUP_STAGING_PATH/image_$IMAGE_ID.tar.bz2
 
-  hook backup-image $BACKUP_STAGING_PATH $IMAGE_ID $SERVICE
+    hook backup-image $BACKUP_STAGING_PATH $IMAGE_ID $SERVICE
+  fi
 done
 
 hook pre-start
