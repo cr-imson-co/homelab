@@ -6,7 +6,7 @@
 # @license MIT license (see /LICENSE for details)
 #
 
-mount_name = 'nextcloud'
+mount_name = 'containers'
 
 execute 'systemd_daemon_reload' do
   command 'systemctl daemon-reload'
@@ -18,24 +18,24 @@ service "mnt-#{mount_name}.mount" do
 end
 
 directory "#{node['configs']['global']['mount_path']}/#{mount_name}" do
-  mode '0770'
-  owner 'www-data'
-  group 'root'
+  mode '0700'
+  owner 993
+  group 993
   action :create
 end
 
-template "#{node['configs']['mount']['samba_credentials_path']}/#{mount_name}" do
-  source 'samba_credentials.erb'
-  mode '0600'
-  owner 'root'
-  group 'root'
-  sensitive true
-  action :create
-  variables(
-    username: node['secrets']['samba_nextcloud_username'],
-    password: node['secrets']['samba_nextcloud_password']
-  )
-end
+# template "#{node['configs']['mount']['samba_credentials_path']}/#{mount_name}" do
+#   source 'samba_credentials.erb'
+#   mode '0600'
+#   owner 'root'
+#   group 'root'
+#   sensitive true
+#   action :create
+#   variables(
+#     username: node['secrets']['samba_gitlab_registry_username'],
+#     password: node['secrets']['samba_gitlab_registry_password']
+#   )
+# end
 
 template "#{node['configs']['global']['systemd_unit_path']}/mnt-#{mount_name}.mount" do
   source 'unit.mount.erb'
@@ -44,12 +44,14 @@ template "#{node['configs']['global']['systemd_unit_path']}/mnt-#{mount_name}.mo
   group 'root'
   action :create
   notifies :run, 'execute[systemd_daemon_reload]', :delayed
+  notifies :enable, "service[mnt-#{mount_name}.mount]", :delayed
   notifies :restart, "service[mnt-#{mount_name}.mount]", :delayed
   variables(
-    remote_mount_name: mount_name,
+    remote_mount_name: "registry/#{mount_name}",
     mount_name: mount_name,
-    cred_name: mount_name,
-    mount_options: ',uid=33,gid=0,file_mode=0770,dir_mode=0770'
+    cred_name: 'registry',
+    mount_options: ',uid=993,gid=993,file_mode=0700,dir_mode=0700'
   )
 end
+
 

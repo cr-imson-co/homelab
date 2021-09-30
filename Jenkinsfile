@@ -26,7 +26,9 @@ pipeline {
   }
   agent {
     docker {
-      image 'docker.cr.imson.co/homelab-ci'
+      image 'containers.cr.imson.co/cr.imson.co/docker-homelab-ci'
+      registryUrl 'https://containers.cr.imson.co/'
+      registryCredentialsId 'f8a2eb1f-3ccc-4dff-ad31-f3d7987f81c0'
     }
   }
   environment {

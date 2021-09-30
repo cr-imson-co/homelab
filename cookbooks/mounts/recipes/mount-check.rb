@@ -42,4 +42,5 @@ end
 
 service 'mount-check.timer' do
   action :enable
+  action :start
 end

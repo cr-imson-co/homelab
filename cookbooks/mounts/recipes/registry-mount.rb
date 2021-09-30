@@ -47,7 +47,9 @@ template "#{node['configs']['global']['systemd_unit_path']}/mnt-#{mount_name}.mo
   notifies :enable, "service[mnt-#{mount_name}.mount]", :delayed
   notifies :restart, "service[mnt-#{mount_name}.mount]", :delayed
   variables(
+    remote_mount_name: mount_name,
     mount_name: mount_name,
+    cred_name: mount_name,
     mount_options: ',uid=998,gid=998,file_mode=0700,dir_mode=0700'
   )
 end

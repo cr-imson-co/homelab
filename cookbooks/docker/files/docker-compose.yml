@@ -80,7 +80,6 @@ services:
       options:
         max-file: "10"
         max-size: "10m"
-    hostname: cr.imson.co
     environment:
       VIRTUAL_HOST: cr.imson.co
       CERT_NAME: cr.imson.co
@@ -108,7 +107,6 @@ services:
       options:
         max-file: "10"
         max-size: "10m"
-    #hostname: cr.imson.co
     environment:
       VIRTUAL_HOST: "nas.cr.imson.co,network.cr.imson.co,dns.cr.imson.co"
       VIRTUAL_PORT: "80"
@@ -137,7 +135,6 @@ services:
       options:
         max-file: "10"
         max-size: "10m"
-    hostname: hub.cr.imson.co
     environment:
       VIRTUAL_PORT: "8080"
       VIRTUAL_HOST: hub.cr.imson.co
@@ -167,7 +164,6 @@ services:
       options:
         max-file: "10"
         max-size: "10m"
-    hostname: gitlab.cr.imson.co
     environment:
       VIRTUAL_HOST: gitlab.cr.imson.co,containers.cr.imson.co
       CERT_NAME: cr.imson.co
@@ -181,9 +177,10 @@ services:
         nginx['client_max_body_size'] = '100m';
         registry['enable'] = true;
         registry_external_url 'https://containers.cr.imson.co';
+        registry['debug_addr'] = 'localhost:5001';
         registry_nginx['listen_port'] = 80;
         registry_nginx['listen_https'] = false;
-        gitlab_rails['registry_path'] = '/mnt/registry/containers';
+        gitlab_rails['registry_path'] = '/mnt/containers';
         gitlab_rails['dependency_proxy_enabled'] = true;
         gitlab_rails['dependency_proxy_storage_path'] = '/mnt/registry/dependencies';
         gitlab_rails['packages_enabled'] = true;
@@ -194,6 +191,7 @@ services:
       crimson:
         aliases:
           - gitlab
+          - containers
     ports:
       # gitlab needs to be the only one on port 22
       # if this isn't the case, change the left port to match
@@ -212,6 +210,9 @@ services:
       - type: bind
         source: /mnt/registry
         target: /mnt/registry
+      - type: bind
+        source: /mnt/containers
+        target: /mnt/containers
 
   jenkins:
     container_name: jenkins
@@ -223,7 +224,6 @@ services:
       options:
         max-file: "10"
         max-size: "10m"
-    hostname: jenkins.cr.imson.co
     environment:
       VIRTUAL_PORT: "8080"
       VIRTUAL_HOST: jenkins.cr.imson.co
@@ -257,7 +257,6 @@ services:
       options:
         max-file: "10"
         max-size: "10m"
-    hostname: docker.cr.imson.co
     environment:
       VIRTUAL_PORT: "5000"
       VIRTUAL_HOST: docker.cr.imson.co
@@ -292,7 +291,6 @@ services:
       options:
         max-file: "10"
         max-size: "10m"
-    hostname: dockerui.cr.imson.co
     environment:
       VIRTUAL_HOST: dockerui.cr.imson.co
       CERT_NAME: cr.imson.co
@@ -332,7 +330,6 @@ services:
       options:
         max-file: "10"
         max-size: "10m"
-    hostname: cloud.cr.imson.co
     environment:
       NEXTCLOUD_TRUSTED_DOMAINS: cloud.cr.imson.co
       NEXTCLOUD_OVERWRITEPROTOCOL: https
@@ -408,7 +405,6 @@ services:
       options:
         max-file: "10"
         max-size: "10m"
-    hostname: cloud.cr.imson.co
     environment:
       VIRTUAL_HOST: cloud.cr.imson.co
       CERT_NAME: cr.imson.co
@@ -440,7 +436,6 @@ services:
       options:
         max-file: "10"
         max-size: "10m"
-    hostname: portainer.cr.imson.co
     environment:
       VIRTUAL_HOST: portainer.cr.imson.co
       VIRTUAL_PORT: 9000

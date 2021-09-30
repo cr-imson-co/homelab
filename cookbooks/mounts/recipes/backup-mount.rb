@@ -46,7 +46,9 @@ template "#{node['configs']['global']['systemd_unit_path']}/mnt-#{mount_name}.mo
   notifies :run, 'execute[systemd_daemon_reload]', :delayed
   notifies :restart, "service[mnt-#{mount_name}.mount]", :delayed
   variables(
+    remote_mount_name: mount_name,
     mount_name: mount_name,
+    cred_name: mount_name,
     mount_options: ''
   )
 end
