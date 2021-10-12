@@ -30,6 +30,7 @@ colors:
     text-title: "#303030"
     text-subtitle: "#424242"
     card-shadow: rgba(0, 0, 0, 0.1)
+    link: "#e36262"
     link-hover: "#363636"
     # background-image: "assets/your/light/bg.png"
   dark:
@@ -43,6 +44,7 @@ colors:
     text-title: "#fafafa"
     text-subtitle: "#f5f5f5"
     card-shadow: rgba(0, 0, 0, 0.4)
+    link: "#bb2d2d"
     link-hover: "#A0A0A0"
     # background-image: "assets/your/dark/bg.png"
 
