@@ -23,6 +23,7 @@ volumes:
   nextcloud_data:
   nextcloud_mariadb_data:
   portainer_data:
+  gitlab_runner_config:
 
 secrets:
   nextcloud_mysql_root_password:
@@ -67,8 +68,8 @@ services:
       target: '/etc/nginx/htpasswd'
     healthcheck:
       test: 'service nginx status >/dev/null || exit 1'
-      start_period: '30s'
-      interval: '1m'
+      start_period: '1m'
+      interval: '3m'
       retries: 3
 
   nginx:
@@ -94,8 +95,8 @@ services:
       read_only: true
     healthcheck:
       test: 'curl -IsSLf http://localhost/ >/dev/null || exit 1'
-      start_period: '30s'
-      interval: '1m'
+      start_period: '1m'
+      interval: '3m'
       retries: 3
 
   homelab_proxy:
@@ -122,8 +123,8 @@ services:
       read_only: true
     # healthcheck:
     #   test: 'curl -IsSLf http://localhost/ >/dev/null || exit 1'
-    #   start_period: '30s'
-    #   interval: '1m'
+    #   start_period: '1m'
+    #   interval: '3m'
     #   retries: 3
 
   homer:
@@ -150,8 +151,8 @@ services:
       read_only: true
     healthcheck:
       test: 'wget --no-verbose --tries=1 --spider http://localhost:8080/ || exit 1'
-      start_period: '30s'
-      interval: '1m'
+      start_period: '1m'
+      interval: '3m'
       retries: 3
 
   gitlab:
@@ -278,48 +279,9 @@ services:
       target: '/var/lib/registry'
     healthcheck:
       test: 'wget --no-verbose --tries=1 --spider http://localhost:5000/ || exit 1'
-      start_period: '30s'
-      interval: '1m'
+      start_period: '1m'
+      interval: '3m'
       retries: 3
-
-  registry_ui:
-    container_name: 'registry_ui'
-    image: 'joxit/docker-registry-ui:latest'
-    restart: 'unless-stopped'
-    logging:
-      driver: 'json-file'
-      options:
-        max-file: '10'
-        max-size: '10m'
-    environment:
-      VIRTUAL_HOST: 'dockerui.cr.imson.co'
-      CERT_NAME: 'cr.imson.co'
-      SSL_POLICY: 'Mozilla-Intermediate'
-      HTTPS_METHOD: 'redirect'
-      # docker-registry-ui specific env vars...
-      NGINX_PROXY_PASS_URL: 'http://docker:5000'
-      SINGLE_REGISTRY: 'true'
-      DELETE_IMAGES: 'true'
-      REGISTRY_TITLE: 'cr.imson.co docker registry'
-      PULL_URL: 'https://docker.cr.imson.co/'
-    networks:
-      crimson:
-        aliases:
-        - 'dockerui'
-    ports:
-    - '80'
-    volumes:
-    - type: 'bind'
-      source: '/srv/registry/config.yml'
-      target: '/etc/docker/registry/config.yml'
-      read_only: true
-    healthcheck:
-      test: 'curl -IsSLf http://localhost/ >/dev/null || exit 1'
-      start_period: '30s'
-      interval: '1m'
-      retries: 3
-    depends_on:
-    - 'registry'
 
   nextcloud_app:
     container_name: 'nextcloud_app'
@@ -371,7 +333,11 @@ services:
       options:
         max-file: '10'
         max-size: '10m'
-    command: '--character-set-server=utf8 --collation-server=utf8_unicode_ci --transaction-isolation=READ-COMMITTED --binlog-format=ROW'
+    command: >
+      --character-set-server=utf8
+      --collation-server=utf8_unicode_ci
+      --transaction-isolation=READ-COMMITTED
+      --binlog-format=ROW
     environment:
       MYSQL_ROOT_PASSWORD_FILE: '/run/secrets/nextcloud_mysql_root_password'
       MYSQL_DATABASE: 'nextcloud'
@@ -381,8 +347,8 @@ services:
       crimson:
         aliases:
           - 'nextcloud-db'
-    ports:
-    - '0.0.0.0:3306:3306'
+    # ports:
+    # - '0.0.0.0:3306:3306'
     volumes:
     - type: 'volume'
       source: 'nextcloud_mariadb_data'
@@ -390,7 +356,7 @@ services:
     healthcheck:
       test: 'mysqladmin ping --silent'
       start_period: '1m'
-      interval: '1m'
+      interval: '3m'
       retries: 3
     secrets:
     - 'nextcloud_mysql_root_password'
@@ -421,8 +387,8 @@ services:
       read_only: true
     healthcheck:
       test: 'curl -IsLf http://localhost/login >/dev/null || exit 1'
-      start_period: '30s'
-      interval: '1m'
+      start_period: '1m'
+      interval: '3m'
       retries: 3
     depends_on:
     - 'nextcloud_app'
@@ -457,3 +423,29 @@ services:
       target: '/var/run/docker.sock'
     secrets:
     - 'portainer_admin_password'
+
+  runner:
+    container_name: 'gitlab_runner'
+    image: 'gitlab/gitlab-runner:latest'
+    restart: 'unless-stopped'
+    logging:
+      driver: 'json-file'
+      options:
+        max-file: '10'
+        max-size: '10m'
+    networks:
+      crimson:
+    # healthcheck:
+    #   test: 'curl -IsLf http://localhost/login >/dev/null || exit 1'
+    #   start_period: '1m'
+    #   interval: '3m'
+    #   retries: 3
+    volumes:
+    - type: 'volume'
+      source: 'gitlab_runner_config'
+      target: '/etc/gitlab-runner'
+    - type: 'bind'
+      source: '/var/run/docker.sock'
+      target: '/var/run/docker.sock'
+    depends_on:
+    - 'gitlab'

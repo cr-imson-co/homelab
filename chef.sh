@@ -18,7 +18,7 @@ if [ "$EUID" -ne 0 ]; then
   exit 1
 fi
 
-pushd $DIR > /dev/null
+pushd "$DIR" > /dev/null
 
 if [ ! -d $CHEF_CONFIG_DIR/ ]; then
   mkdir $CHEF_CONFIG_DIR/
@@ -32,7 +32,7 @@ if [ ! -f $SECRETS_FILE ]; then
   chown root:root $SECRETS_FILE
 fi
 
-SECRETS_FILE=$SECRETS_FILE /opt/chef/embedded/bin/erb $DIR/cookbooks/homelab.json.erb >| $CHEF_CONFIG_DIR/homelab.json
+SECRETS_FILE=$SECRETS_FILE /opt/chef/embedded/bin/erb "$DIR/cookbooks/homelab.json.erb" >| $CHEF_CONFIG_DIR/homelab.json
 chmod 600 $CHEF_CONFIG_DIR/homelab.json
 chown root:root $CHEF_CONFIG_DIR/homelab.json
 
@@ -41,8 +41,8 @@ chef-solo \
   --chef-license accept-silent \
   --json-attributes $CHEF_CONFIG_DIR/homelab.json \
   --local-mode \
-  --config $DIR/solo.rb \
-  -o $1
+  --config "$DIR/solo.rb" \
+  -o "$1"
 set -o nounset
 
 popd > /dev/null

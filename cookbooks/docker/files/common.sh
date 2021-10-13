@@ -13,5 +13,5 @@ set -o errexit -o pipefail -o noclobber -o nounset
 . /srv/homelab/docker_config.sh
 
 dockercompose () {
-  docker-compose --log-level ERROR -f $DOCKER_YML_PATH/$DOCKER_YML_FILENAME -p $DOCKER_PROJECT_NAME $@
+  docker-compose --log-level ERROR -f "$DOCKER_YML_PATH/$DOCKER_YML_FILENAME" -p "$DOCKER_PROJECT_NAME" "$@"
 }

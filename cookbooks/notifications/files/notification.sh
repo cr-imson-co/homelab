@@ -16,22 +16,22 @@ fi
 
 # configuration
 . /srv/homelab/homelab_config.sh
-. $HOMELAB_CONFIG_PATH/global_config.sh
-. $HOMELAB_CONFIG_PATH/secrets_config.sh
+. "$HOMELAB_CONFIG_PATH/global_config.sh"
+. "$HOMELAB_CONFIG_PATH/secrets_config.sh"
 
 set +o nounset
 if [ -z "$2" ]; then
-    echo usage: $0 \<state\> \<message\>
+    echo usage: "$0" \<state\> \<message\>
     exit 1
 fi
 
 NOTIFICATION_TYPE=$1
 shift 1
-MESSAGE=$@
+MESSAGE=$*
 set -o nounset
 
-$GLOBAL_LOCAL_BIN_PATH/apprise \
+"$GLOBAL_LOCAL_BIN_PATH/apprise" \
   --title "homelab $NOTIFICATION_TYPE event" \
   --body "$MESSAGE" \
-  --notification-type $NOTIFICATION_TYPE \
+  --notification-type "$NOTIFICATION_TYPE" \
   "$SECRET_APPRISE_NOTIFICATION_URL/?avatar=No&format=markdown&image=No"

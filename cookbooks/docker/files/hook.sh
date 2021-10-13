@@ -17,10 +17,10 @@ hook () {
   shift 1
 
   if [[ -e $DOCKER_HOOK_PATH/$HOOK_NAME/ ]]; then
-    for HOOK in $DOCKER_HOOK_PATH/$HOOK_NAME/*; do
+    for HOOK in "$DOCKER_HOOK_PATH/$HOOK_NAME"/*; do
       if [[ -x "$HOOK" ]]; then
-        echo :: running hook $HOOK_NAME/$(basename $HOOK)
-        "$HOOK" $@ || exit 1
+        echo :: running hook "$HOOK_NAME"/"$(basename "$HOOK")"
+        "$HOOK" "$@" || exit 1
       fi
     done
   fi

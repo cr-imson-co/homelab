@@ -11,7 +11,7 @@ set -o errexit -o pipefail -o noclobber -o nounset
 
 # configuration
 . /srv/homelab/homelab_config.sh
-. $HOMELAB_CONFIG_PATH/docker_config.sh
+. "$HOMELAB_CONFIG_PATH/docker_config.sh"
 
-$DOCKER_SCRIPTS_PATH/stop.sh
-$DOCKER_SCRIPTS_PATH/start.sh
+"$DOCKER_SCRIPTS_PATH/stop.sh"
+"$DOCKER_SCRIPTS_PATH/start.sh"

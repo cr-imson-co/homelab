@@ -16,15 +16,15 @@ fi
 
 # configuration
 . /srv/homelab/homelab_config.sh
-. $HOMELAB_CONFIG_PATH/global_config.sh
+. "$HOMELAB_CONFIG_PATH/global_config.sh"
 
 set +o nounset
 if [ -z "$1" ]; then
-    echo usage: $0 \<failing service\>
+    echo usage: "$0" \<failing service\>
     exit 1
 fi
 
 FAILING_SERVICE=$1
 set -o nounset
 
-$GLOBAL_LOCAL_BIN_PATH/notification.sh failure "The service '$FAILING_SERVICE' has failed."
+"$GLOBAL_LOCAL_BIN_PATH/notification.sh" failure "The service '$FAILING_SERVICE' has failed."

@@ -11,10 +11,10 @@ set -o errexit -o pipefail -o noclobber -o nounset
 
 # configuration
 . /srv/homelab/homelab_config.sh
-. $HOMELAB_CONFIG_PATH/docker_config.sh
+. "$HOMELAB_CONFIG_PATH/docker_config.sh"
 
-. $DOCKER_SCRIPTS_PATH/common.sh
-. $DOCKER_HOOK_PATH/hook.sh
+. "$DOCKER_SCRIPTS_PATH/common.sh"
+. "$DOCKER_HOOK_PATH/hook.sh"
 
 hook pre-stop
 
