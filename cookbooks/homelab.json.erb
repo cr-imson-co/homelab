@@ -15,6 +15,7 @@ JSON.parse(File.read(ENV['SECRETS_FILE'])).merge({
       config_path: '/srv/homelab',
     },
     docker: {
+      config_path: '/srv/docker/.docker',
       project_name: 'docker',
       yml_filename: 'docker-compose.yml',
       yml_path: '/srv/docker',

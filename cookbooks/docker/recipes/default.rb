@@ -6,11 +6,26 @@
 # @license MIT license (see /LICENSE for details)
 #
 
+directory node['configs']['docker']['config_path'] do
+  owner 'root'
+  group 'docker'
+  mode '0750'
+  action :create
+end
+
 cookbook_file "#{node['configs']['docker']['scripts_path']}/docker-compose.yml" do
   source 'docker-compose.yml'
   owner 'root'
   group 'docker'
   mode '0640'
+  action :create
+end
+
+cookbook_file "#{node['configs']['docker']['scripts_path']}/common.sh" do
+  source 'common.sh'
+  owner 'root'
+  group 'docker'
+  mode '0750'
   action :create
 end
 
