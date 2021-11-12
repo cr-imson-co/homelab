@@ -15,7 +15,6 @@ end
 
 vhost_files = [
   'cloud.cr.imson.co',
-  'docker.cr.imson.co',
   'gitlab.cr.imson.co',
   'containers.cr.imson.co',
 ]

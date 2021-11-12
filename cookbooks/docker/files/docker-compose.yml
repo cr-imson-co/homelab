@@ -12,11 +12,9 @@ networks:
     name: 'crimson'
 
 volumes:
-  # jenkins_home:
   gitlab_config:
   gitlab_logs:
   gitlab_data:
-  registry_data:
   nextcloud_root:
   nextcloud_apps:
   nextcloud_config:
@@ -215,74 +213,6 @@ services:
       source: '/mnt/containers'
       target: '/mnt/containers'
 
-  # jenkins:
-  #   container_name: 'jenkins'
-  #   image: 'containers.cr.imson.co/cr.imson.co/jenkins-docker:latest'
-  #   restart: 'unless-stopped'
-  #   stop_grace_period: '2m'
-  #   logging:
-  #     driver: 'json-file'
-  #     options:
-  #       max-file: '10'
-  #       max-size: '10m'
-  #   environment:
-  #     VIRTUAL_PORT: '8080'
-  #     VIRTUAL_HOST: 'jenkins.cr.imson.co'
-  #     CERT_NAME: 'cr.imson.co'
-  #     SSL_POLICY: 'Mozilla-Intermediate'
-  #     HTTPS_METHOD: 'redirect'
-  #     JAVA_OPTS: '-Duser.timezone=America/Chicago'
-  #   networks:
-  #     crimson:
-  #       aliases:
-  #       - 'jenkins'
-  #   ports:
-  #     # for jenkins slaves
-  #     - '0.0.0.0:50000:50000'
-  #   volumes:
-  #   - type: 'volume'
-  #     source: 'jenkins_home'
-  #     target: '/var/jenkins_home'
-  #   - type: 'bind'
-  #     source: '/var/run/docker.sock'
-  #     target: '/var/run/docker.sock'
-  #   depends_on:
-  #   - 'gitlab'
-
-  # registry:
-  #   container_name: 'registry'
-  #   image: 'registry:2'
-  #   restart: 'unless-stopped'
-  #   logging:
-  #     driver: 'json-file'
-  #     options:
-  #       max-file: '10'
-  #       max-size: '10m'
-  #   environment:
-  #     VIRTUAL_PORT: '5000'
-  #     VIRTUAL_HOST: docker.cr.imson.co
-  #     CERT_NAME: 'cr.imson.co'
-  #     SSL_POLICY: 'Mozilla-Intermediate'
-  #     HTTPS_METHOD: 'redirect'
-  #     REGISTRY_STORAGE_DELETE_ENABLED: 'true'
-  #   networks:
-  #     crimson:
-  #       aliases:
-  #       - 'docker'
-  #   volumes:
-  #   - type: 'bind'
-  #     source: '/srv/registry/config.yml'
-  #     target: '/etc/docker/registry/config.yml'
-  #     read_only: true
-  #   - type: 'volume'
-  #     source: 'registry_data'
-  #     target: '/var/lib/registry'
-  #   healthcheck:
-  #     test: 'wget --no-verbose --tries=1 --spider http://localhost:5000/ || exit 1'
-  #     start_period: '1m'
-  #     interval: '3m'
-  #     retries: 3
-
   nextcloud_app:
     container_name: 'nextcloud_app'
     image: 'containers.cr.imson.co/cr.imson.co/nextcloud-custom:22-fpm'
@@ -347,8 +277,6 @@ services:
       crimson:
         aliases:
           - 'nextcloud-db'
-    # ports:
-    # - '0.0.0.0:3306:3306'
     volumes:
     - type: 'volume'
       source: 'nextcloud_mariadb_data'
