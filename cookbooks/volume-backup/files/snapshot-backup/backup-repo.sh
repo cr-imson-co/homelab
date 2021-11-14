@@ -15,7 +15,6 @@ set -o errexit -o pipefail -o noclobber -o nounset
 
 echo :: backing up homelab repo...
 
-# note: using -u because we need git to create the path, not mktemp...
 TEMP_REPO_PATH=$(mktemp -d -p "$BACKUP_STAGING_PATH/")
 
 pushd "$TEMP_REPO_PATH/" > /dev/null
@@ -27,4 +26,4 @@ git archive --format=tar master | bzip2 -c > "$BACKUP_STAGING_PATH/homelab-repo.
 
 popd > /dev/null
 
-rm -rf "${BACKUP_STAGING_PATH:?}/${TEMP_REPO_PATH:?}/"
+rm -rf "${TEMP_REPO_PATH:?}/"

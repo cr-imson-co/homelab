@@ -44,13 +44,15 @@ for SERVICE in $SERVICES; do
   SERVICES_TO_IMAGE_IDS[$SERVICE]=$(dockercompose images -q "$SERVICE")
 done
 
+hook cleanup-backup "$BACKUP_STAGING_PATH"
+
 # just in case a prior run failed or something...
 echo :: preparing staging directory...
 [ -e "$BACKUP_STAGING_PATH/.backup_metadata" ] && rm "$BACKUP_STAGING_PATH/.backup_metadata"
 [ -e "$BACKUP_STAGING_PATH/$DOCKER_YML_FILENAME.bz2" ] && rm "$BACKUP_STAGING_PATH/$DOCKER_YML_FILENAME.bz2"
 find "$BACKUP_STAGING_PATH/" -name "*.tar.bz2" -exec rm {} \;
 
-hook cleanup-backup "$BACKUP_STAGING_PATH"
+hook snapshot-backup
 
 echo :: snapshotting current docker-compose file...
 bzip2 -c "$DOCKER_YML_PATH/$DOCKER_YML_FILENAME" > "$BACKUP_STAGING_PATH/$DOCKER_YML_FILENAME.bz2"

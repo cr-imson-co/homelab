@@ -61,9 +61,6 @@ services:
       source: '/etc/nginx/vhost.d'
       target: '/etc/nginx/vhost.d'
       read_only: true
-    - type: 'bind'
-      source: '/etc/nginx/htpasswd'
-      target: '/etc/nginx/htpasswd'
     healthcheck:
       test: 'service nginx status >/dev/null || exit 1'
       start_period: '1m'

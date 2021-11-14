@@ -43,6 +43,7 @@ end
 docker_hooks = [
   'pre-backup',
   'post-backup',
+  'snapshot-backup',
   'cleanup-backup',
   'move-backup',
   'backup-volume',
