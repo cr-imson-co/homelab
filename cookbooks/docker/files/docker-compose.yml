@@ -212,7 +212,7 @@ services:
 
   nextcloud_app:
     container_name: 'nextcloud_app'
-    image: 'containers.cr.imson.co/cr.imson.co/nextcloud-custom:22-fpm'
+    image: 'containers.cr.imson.co/cr.imson.co/nextcloud-custom:23-fpm'
     restart: 'unless-stopped'
     logging:
       driver: 'json-file'
@@ -253,7 +253,7 @@ services:
 
   nextcloud_db:
     container_name: 'nextcloud_db'
-    image: 'mariadb:10.5'
+    image: 'mariadb:10.7'
     restart: 'unless-stopped'
     logging:
       driver: 'json-file'
@@ -265,6 +265,8 @@ services:
       --collation-server=utf8_unicode_ci
       --transaction-isolation=READ-COMMITTED
       --binlog-format=ROW
+      --skip-innodb-read-only-compressed
+      --innodb-file-per-table=1
     environment:
       MYSQL_ROOT_PASSWORD_FILE: '/run/secrets/nextcloud_mysql_root_password'
       MYSQL_DATABASE: 'nextcloud'
@@ -320,7 +322,7 @@ services:
 
   portainer:
     container_name: 'portainer'
-    image: 'portainer/portainer-ce:2.9.2'
+    image: 'portainer/portainer-ce:2.11.0'
     restart: 'unless-stopped'
     logging:
       driver: 'json-file'
