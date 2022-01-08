@@ -116,6 +116,6 @@ services:
       - name: "pi-hole"
         icon: "fab fa-raspberry-pi"
         type: "PiHole"
-        tag: "dns"
+        #tag: "dns"
         url: "https://dns.cr.imson.co/admin"
         target: "_blank"
