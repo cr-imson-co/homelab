@@ -10,6 +10,11 @@ shellcheck:
   - 'amd64'
   script:
   - 'find . -type f -iname "*.sh" -print0 | xargs -0 shellcheck -s bash -e SC1091'
+  rules:
+  - if: '($CI_PIPELINE_SOURCE == "web" || $CI_PIPELINE_SOURCE == "webide" || $CI_PIPELINE_SOURCE == "api") && $FORCE_BUILD'
+  - if: '$CI_PIPELINE_SOURCE == "push"'
+    changes:
+    - '**/*.sh'
 
 compose:
   stage: 'test'
@@ -21,6 +26,11 @@ compose:
   - 'amd64'
   script:
   - 'find . -type f -iname "*docker-compose.yml" -print0 | xargs -n 1 -0 -I "{}" docker-compose -f {} config -q'
+  rules:
+  - if: '($CI_PIPELINE_SOURCE == "web" || $CI_PIPELINE_SOURCE == "webide" || $CI_PIPELINE_SOURCE == "api") && $FORCE_BUILD'
+  - if: '$CI_PIPELINE_SOURCE == "push"'
+    changes:
+    - '**/docker-compose.yml'
 
 cookstyle:
   stage: 'test'
@@ -32,3 +42,8 @@ cookstyle:
   - 'amd64'
   script:
   - 'cookstyle -c ./cookbooks/.rubocop.yml --cache false'
+  rules:
+  - if: '($CI_PIPELINE_SOURCE == "web" || $CI_PIPELINE_SOURCE == "webide" || $CI_PIPELINE_SOURCE == "api") && $FORCE_BUILD'
+  - if: '$CI_PIPELINE_SOURCE == "push"'
+    changes:
+    - '**/*.rb'

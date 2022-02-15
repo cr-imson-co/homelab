@@ -14,6 +14,10 @@ cookbook which deploys the certsync service, which fetches certpackage-wadded Le
 
 cookbook which deploys the homelab.
 
+#### `cookbooks/homelab_proxy/`
+
+cookbook which deploys the homelab reverse proxy, which fronts several services such as pihole, the NAS, and the unifi controller.
+
 #### `cookbooks/mounts/`
 
 cookbook which deploys the network filesystem mounts and mount-check services.
@@ -38,6 +42,6 @@ certpackage service which bundles up live LetsEncrypt certificates for replicati
 
 dnsmasq configuration files for a VPN and LAN environment to better enable access to home lab provided services.
 
-#### `subdomains/`
+### todo
 
-scripts for managing the creation and cleanup of domains on the external server used with LetsEncrypt.
+convert to ansible. chef licensing is dumb.

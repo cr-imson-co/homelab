@@ -34,7 +34,7 @@ secrets:
 services:
   nginx-proxy:
     container_name: 'nginx'
-    image: 'jwilder/nginx-proxy:latest'
+    image: 'nginxproxy/nginx-proxy:latest'
     restart: 'unless-stopped'
     logging:
       driver: 'json-file'
@@ -322,7 +322,7 @@ services:
 
   portainer:
     container_name: 'portainer'
-    image: 'portainer/portainer-ce:2.11.0'
+    image: 'portainer/portainer-ce:2.11.1'
     restart: 'unless-stopped'
     logging:
       driver: 'json-file'
