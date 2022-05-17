@@ -137,6 +137,7 @@ services:
       CERT_NAME: 'cr.imson.co'
       SSL_POLICY: 'Mozilla-Intermediate'
       HTTPS_METHOD: 'redirect'
+      INIT_ASSETS: 0
     networks:
       crimson:
     volumes:
