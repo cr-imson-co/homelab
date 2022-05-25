@@ -323,7 +323,7 @@ services:
 
   portainer:
     container_name: 'portainer'
-    image: 'portainer/portainer-ce:2.11.1'
+    image: 'portainer/portainer-ce:2.13.1'
     restart: 'unless-stopped'
     logging:
       driver: 'json-file'
