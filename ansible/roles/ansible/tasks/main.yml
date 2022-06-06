@@ -1,0 +1,97 @@
+---
+
+# note: this does not use
+
+- name: 'handle ansible user configuration'
+  become: true
+  block:
+  - name: 'manage devops group'
+    group:
+      name: '{{ devops_group }}'
+      state: 'present'
+
+  - name: 'manage ansible user'
+    user:
+      name: '{{ devops_user }}'
+      password: '!'
+      shell: '/bin/bash'
+      create_home: true
+      state: 'present'
+      update_password: 'on_create'
+
+  - name: 'manage ansible user groups'
+    user:
+      name: '{{ devops_user }}'
+      append: true
+      groups:
+      - 'sudo'
+      - 'adm'
+      - 'systemd-journal'
+      - 'staff'
+      - 'ssh-enabled'
+      - '{{ devops_group }}'
+
+  - name: 'manage ansible user .ssh directory'
+    file:
+      state: 'directory'
+      path: '/home/{{ devops_user }}/.ssh/'
+      owner: '{{ devops_user }}'
+      group: '{{ devops_user }}'
+      mode: '0700'
+
+  - name: 'get latest ansible keys checksum' # noqa 301
+    become: false
+    local_action:
+      module: 'shell'
+      cmd: >
+        curl -s --head "https://gitlab.cr.imson.co/api/v4/projects/107/repository/files/ansible_keys?ref=master" \
+          | grep x-gitlab-content-sha256 \
+          | awk "{print \$2}"
+      warn: false
+    register: 'ansible_keys_checksum'
+
+  - name: 'get local ansible keys checksum'
+    stat:
+      path: '/home/{{ devops_user }}/.ssh/authorized_keys'
+      checksum_algorithm: 'sha256'
+    register: 'local_ansible_keys_checksum'
+    changed_when: 'not local_ansible_keys_checksum.stat.exists or local_ansible_keys_checksum.stat.checksum != ansible_keys_checksum.stdout'
+
+  - name: 'update ansible keys'
+    block:
+    - name: 'create local temp file' # noqa 305
+      become: false
+      local_action:
+        module: 'shell'
+        cmd: 'mktemp'
+      register: 'ansible_temp'
+    - name: 'download latest ansible keys'
+      become: false
+      local_action:
+        module: 'get_url'
+        url: 'https://gitlab.cr.imson.co/cr.imson.co/ssh-keys/-/raw/master/ansible_keys'
+        dest: '{{ ansible_temp.stdout }}'
+    - name: 'upload latest ansible keys'
+      copy:
+        src: '{{ ansible_temp.stdout }}'
+        dest: '/home/{{ devops_user }}/.ssh/authorized_keys'
+        owner: '{{ devops_user }}'
+        group: '{{ devops_user }}'
+        mode: '0700'
+    - name: 'delete temp file'
+      become: false
+      local_action:
+        module: 'file'
+        path: '{{ ansible_temp.stdout }}'
+        state: 'absent'
+    when: 'local_ansible_keys_checksum.changed'
+
+  - name: 'manage sudoers'
+    copy:
+      dest: '/etc/sudoers.d/01-ansible'
+      content: |
+        # Allow the devops group to run sudo (ALL) with NOPASSWD
+        %{{ devops_group }}       ALL=(ALL)       NOPASSWD: ALL
+      owner: 'root'
+      group: 'root'
+      mode: '0440'

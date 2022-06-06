@@ -1,0 +1,35 @@
+---
+
+- name: 'manage nginx directories and files'
+  become: true
+  block:
+  - name: 'create nginx root directory'
+    file:
+      state: 'directory'
+      path: '{{ configs.nginx.root_path }}'
+      owner: 'root'
+      group: 'root'
+      mode: '0700'
+  - name: 'create nginx cert directory'
+    file:
+      state: 'directory'
+      path: '{{ configs.nginx.certs_path }}'
+      owner: 'root'
+      group: 'root'
+      mode: '0700'
+  - name: 'create nginx vhost directory'
+    file:
+      state: 'directory'
+      path: '{{ configs.nginx.vhost_path }}'
+      owner: 'root'
+      group: 'root'
+      mode: '0700'
+  - name: 'deploy nginx vhost files'
+    copy:
+      src: '{{ item }}'
+      dest: '{{ configs.nginx.vhost_path }}'
+      owner: 'root'
+      group: 'root'
+      mode: '0600'
+    with_fileglob:
+    - 'vhost/{{ ansible_hostname }}/*'

@@ -1,0 +1,184 @@
+#
+# cr.imson.co
+#
+# acme-dns docker configuration
+# @author Damian Bushong <katana@odios.us>
+#
+
+version: '3.7'
+
+volumes:
+  dns_data:
+  nginx_html:
+  acme_companion_data:
+
+networks:
+  local:
+    name: 'local'
+
+services:
+  nginx-proxy:
+    container_name: 'nginx'
+    image: 'nginxproxy/nginx-proxy:latest'
+    restart: 'unless-stopped'
+    logging:
+      driver: 'json-file'
+      options:
+        max-file: '10'
+        max-size: '10m'
+    environment:
+      DEFAULT_HOST: 'cr.imson.co'
+    networks:
+      local:
+    ports:
+    - '0.0.0.0:80:80'
+    - '0.0.0.0:443:443'
+    volumes:
+    - type: 'bind'
+      source: '/var/run/docker.sock'
+      target: '/tmp/docker.sock'
+      read_only: true
+    - type: 'bind'
+      source: '/etc/nginx/certs'
+      target: '/etc/nginx/certs'
+      # read_only: true
+    - type: 'bind'
+      source: '/etc/nginx/vhost.d'
+      target: '/etc/nginx/vhost.d'
+    - type: 'volume'
+      source: 'nginx_html'
+      target: '/usr/share/nginx/html'
+    healthcheck:
+      test: 'service nginx status >/dev/null || exit 1'
+      start_period: '1m'
+      interval: '3m'
+      retries: 3
+
+  acme-companion:
+    container_name: 'acme-companion'
+    image: 'nginxproxy/acme-companion:latest'
+    restart: 'unless-stopped'
+    logging:
+      driver: 'json-file'
+      options:
+        max-file: '10'
+        max-size: '10m'
+    environment:
+      DEFAULT_EMAIL: 'admin@codebite.net'
+    networks:
+      local:
+    volumes_from:
+    - 'nginx-proxy'
+    volumes:
+    - type: 'bind'
+      source: '/var/run/docker.sock'
+      target: '/var/run/docker.sock'
+      read_only: true
+    - type: 'volume'
+      source: 'acme_companion_data'
+      target: '/etc/acme.sh'
+
+  nginx:
+    container_name: 'landing_page'
+    image: 'nginx:alpine'
+    restart: 'unless-stopped'
+    logging:
+      driver: 'json-file'
+      options:
+        max-file: '10'
+        max-size: '10m'
+    environment:
+      VIRTUAL_HOST: 'cr.imson.co'
+      CERT_NAME: 'cr.imson.co'
+      SSL_POLICY: 'Mozilla-Intermediate'
+      HTTPS_METHOD: 'redirect'
+    networks:
+      local:
+    volumes:
+    - type: 'bind'
+      source: '/srv/html'
+      target: '/usr/share/nginx/html'
+      read_only: true
+    healthcheck:
+      test: 'curl -IsSLf http://localhost/ >/dev/null || exit 1'
+      start_period: '1m'
+      interval: '3m'
+      retries: 3
+
+  nginx-alt:
+    container_name: 'landing_page_alt'
+    image: 'nginx:alpine'
+    restart: 'unless-stopped'
+    logging:
+      driver: 'json-file'
+      options:
+        max-file: '10'
+        max-size: '10m'
+    environment:
+      VIRTUAL_HOST: 'codebite.net,odios.us'
+      LETSENCRYPT_HOST: 'codebite.net,odios.us'
+      SSL_POLICY: 'Mozilla-Intermediate'
+      HTTPS_METHOD: 'redirect'
+    networks:
+      local:
+    volumes:
+    - type: 'bind'
+      source: '/srv/html'
+      target: '/usr/share/nginx/html'
+      read_only: true
+    healthcheck:
+      test: 'curl -IsSLf http://localhost/ >/dev/null || exit 1'
+      start_period: '1m'
+      interval: '3m'
+      retries: 3
+
+  dns:
+    container_name: 'acme_dns'
+    build:
+      context: './acme-dns'
+      dockerfile: '../acme-dns.Dockerfile'
+    image: 'joohoi/acme-dns:latest'
+    restart: 'unless-stopped'
+    logging:
+      driver: 'json-file'
+      options:
+        max-file: '10'
+        max-size: '10m'
+    networks:
+      local:
+    ports:
+    - '0.0.0.0:8080:80'
+    # - '0.0.0.0:443:443'
+    - '172.31.9.6:53:53'
+    - '172.31.9.6:53:53/udp'
+    volumes:
+    - type: 'bind'
+      source: '/srv/dns/config'
+      target: '/etc/acme-dns'
+      read_only: true
+    - type: 'volume'
+      source: 'dns_data'
+      target: '/var/lib/acme-dns'
+
+  portainer_agent:
+    container_name: 'portainer_agent'
+    image: 'portainer/agent:2.13.1'
+    restart: 'unless-stopped'
+    logging:
+      driver: 'json-file'
+      options:
+        max-file: '10'
+        max-size: '10m'
+    environment:
+      AGENT_PORT: 9001
+    networks:
+    - 'local'
+    ports:
+    - '10.10.0.2:9001:9001'
+    volumes:
+    - type: 'bind'
+      source: '/var/run/docker.sock'
+      target: '/var/run/docker.sock'
+    - type: 'bind'
+      source: '/var/lib/docker/volumes'
+      target: '/var/lib/docker/volumes'

@@ -1,0 +1,19 @@
+---
+
+- name: 'manage and configure internal reverse proxy configuration'
+  become: true
+  block:
+  - name: 'create nginx reverse-proxy config path'
+    file:
+      state: 'directory'
+      path: '{{ configs.homelab_proxy.config_path }}'
+      owner: 'root'
+      group: 'root'
+      mode: '0755'
+  - name: 'deploy nginx reverse-proxy config'
+    copy:
+      src: 'default.conf'
+      dest: '{{ configs.homelab_proxy.config_path }}/default.conf'
+      owner: 'root'
+      group: 'root'
+      mode: '0644'

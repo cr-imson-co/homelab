@@ -1,0 +1,14 @@
+[Unit]
+Description=Mount {{ mount_name }} share at boot
+After=network-online.target
+Wants=network-online.target
+
+[Mount]
+What=//{{ configs.mount.target_server }}/{{ remote_mount_name }}
+Where=/mnt/{{ mount_name }}
+Options=credentials={{ configs.mount.samba_credentials_path }}/{{ cred_name }},iocharset=utf8,rw,x-systemd.automount{{ mount_options }}
+Type=cifs
+TimeoutSec=30
+
+[Install]
+WantedBy=multi-user.target

@@ -1,7 +1,0 @@
-name 'notifications'
-maintainer 'Damian Bushong'
-maintainer_email 'katana@odios.us'
-license 'MIT'
-description 'Installs/Configures notifications'
-version '0.1.0'
-chef_version '>= 14.0'

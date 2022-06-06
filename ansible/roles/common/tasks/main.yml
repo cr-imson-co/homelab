@@ -1,0 +1,26 @@
+---
+# common configuration playbook
+
+- name: 'handle common configuration'
+  become: true
+  block:
+  - name: 'update package cache'
+    apt:
+      update_cache: true
+      force_apt_get: true
+      cache_valid_time: 3600
+
+  - name: 'install common dependencies'
+    apt:
+      install_recommends: false
+      name:
+      - 'git'
+      - 'htop'
+      - 'zsh'
+      - 'stow'
+      - 'zip'
+      - 'unzip'
+      - 'tar'
+      - 'curl'
+      - 'python3.9'
+      state: 'present'

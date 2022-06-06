@@ -1,0 +1,18 @@
+#!/bin/bash
+#
+# cr.imson.co
+#
+# homelab configuration
+# @author Damian Bushong <katana@odios.us>
+#
+
+# set sane shell env options
+set -o errexit -o pipefail -o noclobber -o nounset
+
+{% for k,v in configs.get(config_name).items() %}
+{% if v is iterable and (v is not string and v is not mapping) %}
+{{ config_name|upper }}_{{ k|upper }}=({{ v|join(" ") }})
+{% else %}
+{{ config_name|upper }}_{{ k|upper }}={{ v|string }}
+{% endif %}
+{% endfor %}

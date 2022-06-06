@@ -1,0 +1,79 @@
+---
+
+- name: 'manage docker stack management tools'
+  become: true
+  block:
+  - name: 'create docker config path'
+    file:
+      state: 'directory'
+      path: '{{ configs.docker.config_path }}'
+      owner: 'root'
+      group: 'docker'
+      mode: '0750'
+
+  - name: 'check to see if the docker credentials file is present'
+    stat:
+      path: '{{ configs.docker.config_path }}/config.json'
+    register: 'docker_creds'
+
+  - name: 'warn administrator if docker creds path newly created'
+    debug:
+      msg: 'administrator must configure docker with credentials to access gitlab container registry'
+    when: 'not docker_creds.stat.exists'
+
+  - name: 'check if a compose file should be deployed'
+    become: false
+    delegate_to: 127.0.0.1
+    stat:
+      path: 'compose/{{ ansible_hostname }}/docker-compose.yml'
+    register: 'docker_compose_file_exists'
+
+  - name: 'deploy docker-compose.yml'
+    copy:
+      src: 'compose/{{ ansible_hostname }}/docker-compose.yml'
+      dest: '{{ configs.docker.scripts_path }}/docker-compose.yml'
+      owner: 'root'
+      group: 'docker'
+      mode: '0640'
+    when: 'docker_compose_file_exists.stat.exists'
+
+  - name: 'deploy docker stack management scripts'
+    copy:
+      src: '{{ item }}'
+      dest: '{{ configs.docker.scripts_path }}'
+      owner: 'root'
+      group: 'docker'
+      mode: '0750'
+    with_fileglob:
+    - 'scripts/*'
+
+  - name: 'deploy docker main hook directory'
+    file:
+      state: 'directory'
+      path: '{{ configs.docker.hook_path }}'
+      owner: 'root'
+      group: 'docker'
+      mode: '0770'
+
+  - name: 'deploy docker main hook file'
+    copy:
+      src: 'hooks/hook.sh'
+      dest: '{{ configs.docker.hook_path }}/hook.sh'
+      owner: 'root'
+      group: 'docker'
+      mode: '0770'
+
+  - name: 'deploy docker hook directories'
+    file:
+      state: 'directory'
+      path: '{{ configs.docker.hook_path }}/{{ item }}'
+      owner: 'root'
+      group: 'docker'
+      mode: '0770'
+    with_items:
+    - 'pre-start'
+    - 'post-start'
+    - 'pre-stop'
+    - 'post-stop'
+    - 'pre-update'
+    - 'post-update'

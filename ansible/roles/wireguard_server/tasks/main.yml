@@ -1,0 +1,73 @@
+---
+
+- name: 'install wireguard'
+  become: true
+  apt:
+    install_recommends: false
+    name: 'wireguard'
+    state: 'present'
+
+- name: 'create wireguard config directory'
+  become: true
+  file:
+    path: '/etc/wireguard/{{ wireguard_interface }}'
+    state: 'directory'
+    owner: 'root'
+    group: 'root'
+    mode: '0700'
+
+- name: 'create wireguard clients directory'
+  become: true
+  file:
+    path: '/etc/wireguard/{{ wireguard_interface }}/clients'
+    state: 'directory'
+    owner: 'root'
+    group: 'root'
+    mode: '0700'
+
+- name: 'deploy wireguard server initialization script'
+  become: true
+  copy:
+    src: 'init_server.py'
+    dest: '/etc/wireguard/init_server.py'
+    owner: 'root'
+    group: 'root'
+    mode: '0700'
+
+- name: 'check if wireguard is initialized'
+  become: true
+  stat:
+    path: '/etc/wireguard/{{ wireguard_interface }}/server.conf.json'
+  register: 'wireguard_initialized'
+
+- name: 'initialize wireguard server config'
+  become: true
+  shell:
+    cmd: >
+      /etc/wireguard/init_server.py
+      {{ vpn_endpoint }}
+      --port {{ vpn_port }}
+      --vpn-network-cidr {{ vpn_network_cidr }}
+      --server-config-path /etc/wireguard/{{ wireguard_interface }}/server.conf.json
+      --server-identity-path /etc/wireguard/{{ wireguard_interface }}/server.ident.json
+      {% if vpn_dns_ip is defined %}
+      --dns-ip {{ vpn_dns_ip }}
+      {% endif %}
+  when: 'not wireguard_initialized.stat.exists'
+
+- name: 'copy wireguard server identity to ansible user dir'
+  become: true
+  copy:
+    remote_src: true
+    src: '/etc/wireguard/{{ wireguard_interface }}/server.ident.json'
+    dest: '/home/{{ ansible_user }}/server.ident.json'
+    owner: '{{ ansible_user }}'
+    group: '{{ ansible_user }}'
+    mode: '0600'
+
+- name: 'fetch wireguard server identity'
+  fetch:
+    src: '/home/{{ ansible_user }}/server.ident.json'
+    dest: '.wireguard-server/server.ident.json'
+    flat: true
+

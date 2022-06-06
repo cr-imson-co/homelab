@@ -1,0 +1,51 @@
+---
+
+- name: 'manage and configure containers network mount'
+  become: true
+  block:
+  - name: 'set common template variables'
+    set_fact:
+      # credentials (MUST be cleared after run)
+      #! note: this reuses the registry credentials
+      #!   the main difference is different mount options
+      samba_username: '{{ secrets.samba_gitlab_registry_username }}'
+      samba_password: '{{ secrets.samba_gitlab_registry_password }}'
+      # mount vars
+      remote_mount_name: 'containers'
+      mount_name: 'containers'
+      cred_name: 'registry'
+      mount_options: ',uid=993,gid=993,file_mode=0700,dir_mode=0700'
+    no_log: true
+  - name: 'create mount path'
+    file:
+      state: 'directory'
+      path: '{{ configs.global.mount_path }}/{{ mount_name }}'
+      #! note: also specific to this mount
+      owner: 993
+      group: 993
+      mode: '0700'
+  - name: 'deploy systemd mount unit'
+    template:
+      src: 'unit.mount.j2'
+      dest: '{{ configs.global.systemd_unit_path }}/mnt-{{ mount_name }}.mount'
+      owner: 'root'
+      group: 'root'
+      mode: '0644'
+  - name: 'deploy samba credential file'
+    template:
+      src: 'samba_credentials.j2'
+      dest: '{{ configs.mount.samba_credentials_path }}/{{ cred_name }}'
+      owner: 'root'
+      group: 'root'
+      mode: '0600'
+    no_log: true
+  - name: 'clear credential variables'
+    set_fact:
+      samba_username: ''
+      samba_password: ''
+  - name: 'Start and enable network mount'
+    systemd:
+      name: 'mnt-{{ mount_name }}.mount'
+      daemon_reload: true
+      enabled: true
+      state: 'started'

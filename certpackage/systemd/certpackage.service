@@ -1,8 +1,0 @@
-[Unit]
-Description=Certpackage
-
-[Service]
-Type=oneshot
-ExecStart=/usr/local/bin/certpackage.sh
-PrivateTmp=true
-

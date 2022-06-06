@@ -1,0 +1,78 @@
+#
+# cr.imson.co
+#
+# pihole docker configuration
+# @author Damian Bushong <katana@odios.us>
+#
+
+version: '3.7'
+
+volumes:
+  pihole_data:
+  dnsmasq_data:
+
+networks:
+  local:
+    name: 'local'
+
+secrets:
+  pihole_admin:
+    file: './pihole_admin'
+
+services:
+  dns:
+    container_name: 'pihole'
+    image: 'pihole/pihole:latest'
+    restart: 'unless-stopped'
+    logging:
+      driver: 'json-file'
+      options:
+        max-file: '10'
+        max-size: '10m'
+    networks:
+      - 'local'
+    environment:
+      TZ: 'America/Chicago'
+      WEBPASSWORD_FILE: '/run/secrets/pihole_admin'
+      VIRTUAL_HOST: 'rpi.vpn.cr.imson.co'
+      PIHOLE_DNS_: '1.1.1.1;1.0.0.1'
+      PIHOLE_UID: 0
+    ports:
+      - '10.10.0.1:53:53'
+      - '10.10.0.1:53:53/udp'
+      - '10.10.0.1:80:80'
+    volumes:
+    - type: 'volume'
+      source: 'pihole_data'
+      target: '/etc/pihole'
+    - type: 'volume'
+      source: 'dnsmasq_data'
+      target: '/etc/dnsmasq.d/'
+    - type: 'bind'
+      source: '/srv/docker/02-vpn.conf'
+      target: '/etc/dnsmasq.d/02-vpn.conf'
+    secrets:
+    - 'pihole_admin'
+
+  portainer_agent:
+    container_name: 'portainer_agent'
+    image: 'portainer/agent:2.13.1'
+    restart: 'unless-stopped'
+    logging:
+      driver: 'json-file'
+      options:
+        max-file: '10'
+        max-size: '10m'
+    environment:
+      AGENT_PORT: 9001
+    networks:
+      - 'local'
+    ports:
+      - '0.0.0.0:9001:9001'
+    volumes:
+      - type: 'bind'
+        source: '/var/run/docker.sock'
+        target: '/var/run/docker.sock'
+      - type: 'bind'
+        source: '/var/lib/docker/volumes'
+        target: '/var/lib/docker/volumes'

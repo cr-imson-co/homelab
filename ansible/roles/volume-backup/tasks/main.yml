@@ -1,0 +1,72 @@
+---
+
+- name: 'manage volume-backup service'
+  become: true
+  block:
+  - name: 'deploy volume-backup script'
+    copy:
+      src: 'volume-backup.sh'
+      dest: '{{ configs.global.local_bin_path }}/volume-backup.sh'
+      owner: 'root'
+      group: 'staff'
+      mode: '0744'
+  - name: 'deploy volume-backup systemd service'
+    copy:
+      src: 'volume-backup.service'
+      dest: '{{ configs.global.systemd_unit_path }}/volume-backup.service'
+      owner: 'root'
+      group: 'root'
+      mode: '0644'
+    register: 'volume_backup_service'
+  - name: 'deploy volume-backup systemd timer'
+    copy:
+      src: 'volume-backup.timer'
+      dest: '{{ configs.global.systemd_unit_path }}/volume-backup.timer'
+      owner: 'root'
+      group: 'root'
+      mode: '0644'
+    register: 'volume_backup_timer'
+  - name: 'systemd daemon-reload'
+    systemd:
+      daemon_reload: true
+    when: 'volume_backup_service.changed or volume_backup_timer.changed'
+  - name: 'deploy docker hook directories'
+    file:
+      state: 'directory'
+      path: '{{ configs.docker.hook_path }}/{{ item }}'
+      owner: 'root'
+      group: 'docker'
+      mode: '0770'
+    with_items:
+    - 'pre-backup'
+    - 'post-backup'
+    - 'snapshot-backup'
+    - 'cleanup-backup'
+    - 'move-backup'
+    - 'backup-volume'
+    - 'backup-image'
+
+- name: 'manage volume-backup hooks'
+  become: true
+  block:
+  - name: 'deploy check-backup-mount hook'
+    copy:
+      src: 'hooks/pre-backup/check-backup-mount.sh'
+      dest: '{{ configs.docker.hook_path }}/pre-backup/check-backup-mount.sh'
+      owner: 'root'
+      group: 'docker'
+      mode: '0740'
+  - name: 'deploy notify-success hook'
+    copy:
+      src: 'hooks/post-backup/notify-success.sh'
+      dest: '{{ configs.docker.hook_path }}/post-backup/notify-success.sh'
+      owner: 'root'
+      group: 'docker'
+      mode: '0740'
+  - name: 'deploy backup-repo hook'
+    copy:
+      src: 'hooks/snapshot-backup/backup-repo.sh'
+      dest: '{{ configs.docker.hook_path }}/snapshot-backup/backup-repo.sh'
+      owner: 'root'
+      group: 'docker'
+      mode: '0740'

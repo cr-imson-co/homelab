@@ -1,0 +1,10 @@
+#!/usr/bin/env ansible-playbook
+---
+
+- hosts: 'all'
+  roles:
+  - 'common'
+  - 'updates'
+  - 'ssh'
+  - 'ansible'
+  - 'admin'

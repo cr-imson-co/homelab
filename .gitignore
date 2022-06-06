@@ -1,8 +1,7 @@
-# chef-specific files/dirs to ignore
-chef-client-running.pid
-chef-stacktrace.out
-chef_guid
-local-mode-cache/
-nodes/
-
+ansible/.wireguard
+ansible/.wireguard-server
+!ansible/.wireguard/.gitkeep
+!ansible/.wireguard-server/.gitkeep
+ansible/secrets/
+!ansible/secrets/.gitkeep
 secrets.json

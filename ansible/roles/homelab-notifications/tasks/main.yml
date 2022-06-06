@@ -1,0 +1,52 @@
+---
+
+- name: 'manage and configure notifications capability'
+  become: true
+  block:
+  - name: 'install required packages'
+    apt:
+      install_recommends: false
+      name:
+      - 'python3'
+      - 'python3-pip'
+      - 'python3-setuptools'
+      state: 'present'
+  - name: 'deploy notification script'
+    copy:
+      src: 'notification.sh'
+      dest: '{{ configs.global.local_bin_path }}/notification.sh'
+      owner: 'root'
+      group: 'staff'
+      mode: '0740'
+  - name: 'deploy failure notification script'
+    copy:
+      src: 'failure_notification.sh'
+      dest: '{{ configs.global.local_bin_path }}/failure_notification.sh'
+      owner: 'root'
+      group: 'staff'
+      mode: '0740'
+  - name: 'deploy notification script'
+    copy:
+      src: 'failure-notification@.service'
+      dest: '{{ configs.global.local_bin_path }}/failure-notification@.service'
+      owner: 'root'
+      group: 'root'
+      mode: '0644'
+    register: 'failure_notification_systemd_service'
+  - name: 'upload apprise-requirements.txt file'
+    copy:
+      src: 'apprise_requirements.txt'
+      dest: '{{ configs.homelab.config_path }}/apprise_requirements.txt'
+      owner: 'root'
+      group: 'staff'
+      mode: '0740'
+    register: 'apprise_requirements'
+  - name: 'install apprise'
+    pip:
+      executable: 'pip3'
+      requirements: '{{ configs.homelab.config_path }}/apprise_requirements.txt'
+    when: 'apprise_requirements.changed'
+  - name: 'systemd daemon-reload'
+    systemd:
+      daemon_reload: true
+    when: 'failure_notification_systemd_service.changed'

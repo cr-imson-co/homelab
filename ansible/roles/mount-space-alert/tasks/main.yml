@@ -1,0 +1,32 @@
+---
+
+- name: 'manage check-space-remaining service'
+  become: true
+  block:
+  - name: 'deploy check-space-remaining script'
+    copy:
+      src: 'check-space-remaining.sh'
+      dest: '{{ configs.global.local_bin_path }}/check-space-remaining.sh'
+      owner: 'root'
+      group: 'staff'
+      mode: '0740'
+  - name: 'deploy check-space-remaining systemd service'
+    copy:
+      src: 'check-space-remaining.service'
+      dest: '{{ configs.global.systemd_unit_path }}/check-space-remaining.service'
+      owner: 'root'
+      group: 'root'
+      mode: '0644'
+    register: 'check_space_remaining_service'
+  - name: 'deploy check-space-remaining systemd timer'
+    copy:
+      src: 'check-space-remaining.timer'
+      dest: '{{ configs.global.systemd_unit_path }}/check-space-remaining.timer'
+      owner: 'root'
+      group: 'root'
+      mode: '0644'
+    register: 'check_space_remaining_timer'
+  - name: 'systemd daemon-reload'
+    systemd:
+      daemon_reload: true
+    when: 'check_space_remaining_service.changed or check_space_remaining_timer.changed'

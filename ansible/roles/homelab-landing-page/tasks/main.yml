@@ -1,0 +1,23 @@
+---
+
+- name: 'manage and deploy homelab landing page'
+  become: true
+  block:
+  - name: 'create landing page html'
+    file:
+      state: 'directory'
+      path: '{{ configs.nginx.html_path }}'
+      owner: 'root'
+      group: 'root'
+      mode: '0755'
+  - name: 'deploy landing page files'
+    copy:
+      src: '{{ item }}'
+      dest: '{{ configs.nginx.html_path }}'
+      owner: 'root'
+      group: 'root'
+      mode: '0644'
+    with_items:
+    - 'favicon.ico'
+    - 'index.html'
+    - 'shana2.css'

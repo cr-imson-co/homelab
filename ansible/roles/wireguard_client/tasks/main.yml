@@ -1,0 +1,78 @@
+---
+
+- name: 'install wireguard'
+  become: true
+  apt:
+    install_recommends: false
+    name: 'wireguard'
+    state: 'present'
+
+- name: 'create wireguard config directory'
+  become: true
+  file:
+    path: '/etc/wireguard/{{ wireguard_interface }}'
+    state: 'directory'
+    owner: 'root'
+    group: 'root'
+    mode: '0700'
+
+- name: 'deploy wireguard client configuration script'
+  become: true
+  copy:
+    src: 'build_client_config.py'
+    dest: '/etc/wireguard/build_client_config.py'
+    owner: 'root'
+    group: 'root'
+    mode: '0700'
+
+- name: 'check if wireguard server identity is present'
+  become: true
+  stat:
+    path: '/etc/wireguard/{{ wireguard_interface }}/server.conf.json'
+  register: 'wireguard_server_ident_present'
+
+- name: 'copy wireguard server identity to server'
+  become: true
+  copy:
+    src: '.wireguard-server/server.ident.json'
+    dest: '/etc/wireguard/{{ wireguard_interface }}/server.ident.json'
+    owner: 'root'
+    group: 'root'
+    mode: '0600'
+  when: 'not wireguard_server_ident_present.stat.exists'
+
+- name: 'check if wireguard is configured'
+  become: true
+  stat:
+    path: '/etc/wireguard/{{ wireguard_interface }}.conf'
+  register: 'wireguard_client_configured'
+
+- name: 'build wireguard client config'
+  become: true
+  shell:
+    cmd: >
+      python3.9 /etc/wireguard/build_client_config.py
+      {{ vpn_ip }}
+      --server-identity-path /etc/wireguard/{{ wireguard_interface }}/server.ident.json
+      --client-identity-path /etc/wireguard/{{ wireguard_interface }}/client.ident.json
+      --wg-conf-path /etc/wireguard/{{ wireguard_interface }}.conf
+      {% if use_dns is defined %}
+      --use-dns
+      {% endif %}
+  when: 'not wireguard_client_configured.stat.exists'
+
+- name: 'copy wireguard client identity to ansible user dir'
+  become: true
+  copy:
+    remote_src: true
+    src: '/etc/wireguard/{{ wireguard_interface }}/client.ident.json'
+    dest: '/home/{{ ansible_user }}/client.ident.json'
+    owner: '{{ ansible_user }}'
+    group: '{{ ansible_user }}'
+    mode: '0600'
+
+- name: 'fetch wireguard client identity'
+  fetch:
+    src: '/home/{{ ansible_user }}/client.ident.json'
+    dest: '.wireguard/{{ ansible_hostname }}.ident.json'
+    flat: true

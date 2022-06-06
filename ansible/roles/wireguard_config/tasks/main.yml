@@ -1,0 +1,43 @@
+---
+
+- name: 'copy all wireguard client files to server'
+  become: true
+  copy:
+    src: '{{ item }}'
+    dest: '/etc/wireguard/{{ wireguard_interface }}/clients'
+    owner: 'root'
+    group: 'root'
+    mode: '0600'
+  with_fileglob:
+  - '.wireguard/*.ident.json'
+
+- name: 'deploy wireguard server configuration script'
+  become: true
+  copy:
+    src: 'build_server_config.py'
+    dest: '/etc/wireguard/build_server_config.py'
+    owner: 'root'
+    group: 'root'
+    mode: '0700'
+
+- name: 'check if wireguard is configured'
+  become: true
+  stat:
+    path: '/etc/wireguard/{{ wireguard_interface }}.conf'
+  register: 'wireguard_server_configured'
+
+- name: 'build wireguard server config' # noqa no-changed-when
+  become: true
+  shell:
+    cmd: >
+      /etc/wireguard/build_server_config.py
+      --server-config-path /etc/wireguard/{{ wireguard_interface }}/server.conf.json
+      --client-identities-path /etc/wireguard/{{ wireguard_interface }}/clients
+      --wg-conf-path /etc/wireguard/{{ wireguard_interface }}.conf
+  # when: 'not wireguard_server_configured.stat.exists'
+
+- name: 'start wireguard service'
+  service:
+    name: 'wg-quick@{{ wireguard_interface }}.service'
+    state: 'started'
+    enabled: true

@@ -1,0 +1,41 @@
+
+---
+
+- name: 'manage and deploy homer assets and configuration'
+  become: true
+  block:
+  - name: 'create homer root path'
+    file:
+      state: 'directory'
+      path: '{{ configs.homer.root_path }}'
+      owner: 'root'
+      group: 'root'
+      mode: '0755'
+  - name: 'create homer icons path'
+    file:
+      state: 'directory'
+      path: '{{ configs.homer.root_path }}/icons'
+      owner: 'root'
+      group: 'root'
+      mode: '0755'
+  - name: 'deploy homer configs'
+    copy:
+      src: '{{ item }}'
+      dest: '{{ configs.homer.root_path }}'
+      owner: 'root'
+      group: 'root'
+      mode: '0644'
+    with_items:
+    - 'config.yml'
+    - 'custom.css'
+  - name: 'deploy homer icons'
+    copy:
+      src: '{{ item }}'
+      dest: '{{ configs.homer.root_path }}/icons'
+      owner: 'root'
+      group: 'root'
+      mode: '0644'
+    with_items:
+    - 'icons/crimson.logo_512_t.png'
+    - 'icons/favicon-16x16.png'
+    - 'icons/favicon-32x32.png'

@@ -1,0 +1,48 @@
+---
+
+- name: 'manage and configure backup network mount'
+  become: true
+  block:
+  - name: 'set common template variables'
+    set_fact:
+      # credentials (MUST be cleared after run)
+      samba_username: '{{ secrets.samba_backup_username }}'
+      samba_password: '{{ secrets.samba_backup_password }}'
+      # mount vars
+      remote_mount_name: 'backup'
+      mount_name: 'backup'
+      cred_name: 'backup'
+      mount_options: ''
+    no_log: true
+  - name: 'create mount path'
+    file:
+      state: 'directory'
+      path: '{{ configs.global.mount_path }}/{{ mount_name }}'
+      owner: 'root'
+      group: 'root'
+      mode: '0755'
+  - name: 'deploy systemd mount unit'
+    template:
+      src: 'unit.mount.j2'
+      dest: '{{ configs.global.systemd_unit_path }}/mnt-{{ mount_name }}.mount'
+      owner: 'root'
+      group: 'root'
+      mode: '0644'
+  - name: 'deploy samba credential file'
+    template:
+      src: 'samba_credentials.j2'
+      dest: '{{ configs.mount.samba_credentials_path }}/{{ cred_name }}'
+      owner: 'root'
+      group: 'root'
+      mode: '0600'
+    # no_log: true
+  - name: 'clear credential variables'
+    set_fact:
+      samba_username: ''
+      samba_password: ''
+  - name: 'Start and enable network mount'
+    systemd:
+      name: 'mnt-{{ mount_name }}.mount'
+      daemon_reload: true
+      enabled: true
+      state: 'started'

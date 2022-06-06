@@ -1,0 +1,201 @@
+---
+
+- name: 'handle admin user configuration'
+  become: true
+  block:
+  - name: 'get local username' # noqa command-instead-of-shell no-changed-when
+    become: false
+    local_action:
+      module: 'shell'
+      cmd: 'whoami'
+      warn: false
+    register: 'admin_user'
+
+  - name: 'download oh-my-zsh' # noqa git-latest
+    git:
+      accept_hostkey: true
+      repo: 'https://github.com/ohmyzsh/ohmyzsh.git'
+      dest: '/tmp/.oh-my-zsh'
+      clone: true
+      update: false
+
+  - name: 'download dotfiles' # noqa git-latest
+    git:
+      repo: 'https://github.com/damianb/dotfiles.git'
+      dest: '/tmp/dotfiles'
+      accept_hostkey: true
+      clone: true
+      update: false
+
+  - name: 'manage admin group'
+    group:
+      name: '{{ admin_user.stdout }}'
+      state: 'present'
+
+  - name: 'manage admin user'
+    user:
+      name: '{{ admin_user.stdout }}'
+      group: '{{ admin_user.stdout }}'
+      password: '!'
+      # note: /bin/zsh is too heavy for the pis, we need to use bash there instead
+      shell: '{{ "/bin/zsh" if ansible_architecture == "x86_64" else "/bin/bash" }}'
+      create_home: true
+      state: 'present'
+      update_password: 'on_create'
+
+  - name: 'manage admin user groups'
+    user:
+      name: '{{ admin_user.stdout }}'
+      append: true
+      groups:
+      - 'sudo'
+      - 'adm'
+      - 'systemd-journal'
+      - 'staff'
+      - 'ssh-enabled'
+      - 'devops'
+
+  - name: 'manage admin user .ssh directory'
+    file:
+      state: 'directory'
+      path: '/home/{{ admin_user.stdout }}/.ssh/'
+      owner: '{{ admin_user.stdout }}'
+      group: '{{ admin_user.stdout }}'
+      mode: '0700'
+
+  # ...let's make sure the SSH keys are up to date.
+  - name: 'get latest admin keys checksum' # noqa command-instead-of-shell no-changed-when
+    become: false
+    local_action:
+      module: 'shell'
+      cmd: >
+        curl -s --head "https://gitlab.cr.imson.co/api/v4/projects/107/repository/files/katana_keys?ref=master" \
+          | grep x-gitlab-content-sha256 \
+          | awk "{print \$2}"
+      warn: false
+    register: 'admin_keys_checksum'
+
+  - name: 'get local admin keys checksum'
+    stat:
+      path: '/home/{{ admin_user.stdout }}/.ssh/authorized_keys'
+      checksum_algorithm: 'sha256'
+    register: 'local_admin_keys_checksum'
+    changed_when: 'local_admin_keys_checksum.stat.checksum is not defined or local_admin_keys_checksum.stat.checksum != admin_keys_checksum.stdout'
+
+  - name: 'update admin keys'
+    block:
+    - name: 'create local temp file' # noqa command-instead-of-shell
+      become: false
+      local_action:
+        module: 'shell'
+        cmd: 'mktemp'
+      register: 'admin_temp'
+    - name: 'download latest admin keys'
+      become: false
+      local_action:
+        module: 'get_url'
+        url: 'https://gitlab.cr.imson.co/cr.imson.co/ssh-keys/-/raw/master/katana_keys'
+        dest: '{{ admin_temp.stdout }}'
+    - name: 'upload latest admin keys'
+      copy:
+        src: '{{ admin_temp.stdout }}'
+        dest: '/home/{{ admin_user.stdout }}/.ssh/authorized_keys'
+        owner: '{{ admin_user.stdout }}'
+        group: '{{ admin_user.stdout }}'
+        mode: '0700'
+    - name: 'delete temp file'
+      become: false
+      local_action:
+        module: 'file'
+        path: '{{ admin_temp.stdout }}'
+        state: 'absent'
+    when: 'local_admin_keys_checksum.changed'
+
+  - name: 'determine if admin user has been configured'
+    stat:
+      path: '/home/{{ admin_user.stdout }}/.zshrc'
+    register: 'admin_zshrc'
+
+  - name: 'configure admin user'
+    block:
+    - name: 'copy oh-my-zsh for admin'
+      copy:
+        remote_src: true
+        src: '/tmp/.oh-my-zsh'
+        dest: '/home/{{ admin_user.stdout }}/'
+        owner: '{{ admin_user.stdout }}'
+        group: '{{ admin_user.stdout }}'
+        mode: '0770'
+
+    - name: 'copy dotfiles for admin'
+      copy:
+        remote_src: true
+        src: '/tmp/dotfiles'
+        dest: '/home/{{ admin_user.stdout }}/'
+        owner: '{{ admin_user.stdout }}'
+        group: '{{ admin_user.stdout }}'
+        mode: '0770'
+
+    - name: 'purge bashrc file (in preparation of stowing)'
+      file:
+        path: '/home/{{ admin_user.stdout }}/.bashrc'
+        state: 'absent'
+
+    - name: 'purge zshrc file (in preparation of stowing)'
+      file:
+        path: '/home/{{ admin_user.stdout }}/.zshrc'
+        state: 'absent'
+
+    - name: 'deploy dotfiles for admin'
+      command:
+        cmd: 'su - {{ admin_user.stdout }} -c "cd /home/{{ admin_user.stdout }}/dotfiles/; stow bash git tmux zsh"'
+        warn: false # become_user is dumb and broken, I know what I'm doing. fuck off.
+    when: 'not admin_zshrc.stat.exists'
+
+
+  # and now, customizing root...
+  - name: 'determine if root has been configured'
+    stat:
+      path: '/root/.zshrc'
+    register: 'root_zshrc'
+
+  - name: 'configure root user'
+    block:
+    - name: 'copy oh-my-zsh for root'
+      copy:
+        remote_src: true
+        src: '/tmp/.oh-my-zsh'
+        dest: '/root/'
+        owner: 'root'
+        group: 'root'
+        mode: '0770'
+
+    - name: 'copy dotfiles for root'
+      copy:
+        remote_src: true
+        src: '/tmp/dotfiles'
+        dest: '/root/'
+        owner: 'root'
+        group: 'root'
+        mode: '0770'
+
+    - name: 'purge bashrc file (in preparation of stowing)'
+      file:
+        path: '/root/.bashrc'
+        state: 'absent'
+
+    - name: 'purge zshrc file (in preparation of stowing)'
+      file:
+        path: '/root/.zshrc'
+        state: 'absent'
+
+    - name: 'deploy dotfiles for root'
+      command:
+        chdir: '/root/dotfiles/'
+        cmd: 'stow bash git tmux zsh'
+
+    - name: 'switch root to zsh'
+      user:
+        name: 'root'
+        shell: '/bin/zsh'
+    when: 'not root_zshrc.stat.exists'

@@ -1,0 +1,7 @@
+---
+
+- name: 'disable init user'
+  become: true
+  user:
+    name: 'ubuntu'
+    shell: '/sbin/nologin'

@@ -24,26 +24,33 @@ compose:
   tags:
   - 'docker'
   - 'amd64'
-  script:
-  - 'find . -type f -iname "*docker-compose.yml" -print0 | xargs -n 1 -0 -I "{}" docker-compose -f {} config -q'
+  script: |
+    find . \
+      -type f \
+      -iname "*docker-compose.yml" \
+      -not -path "./ansible/roles/docker-stack/files/compose/comet/*" \
+      -print0 \
+        | xargs -n 1 -0 -I "{}" docker-compose -f {} config -q
   rules:
   - if: '($CI_PIPELINE_SOURCE == "web" || $CI_PIPELINE_SOURCE == "webide" || $CI_PIPELINE_SOURCE == "api") && $FORCE_BUILD'
   - if: '$CI_PIPELINE_SOURCE == "push"'
     changes:
     - '**/docker-compose.yml'
 
-cookstyle:
+ansible-lint:
   stage: 'test'
   image:
-    name: '${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/chef/chefdk:4.9.17'
+    name: '${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/cytopia/ansible-lint:latest'
     entrypoint: ['']
   tags:
   - 'docker'
   - 'amd64'
   script:
-  - 'cookstyle -c ./cookbooks/.rubocop.yml --cache false'
+  # todo: dynamically construct lint.yml
+  - 'cd ansible'
+  - 'ansible-lint lint.yml'
   rules:
   - if: '($CI_PIPELINE_SOURCE == "web" || $CI_PIPELINE_SOURCE == "webide" || $CI_PIPELINE_SOURCE == "api") && $FORCE_BUILD'
   - if: '$CI_PIPELINE_SOURCE == "push"'
     changes:
-    - '**/*.rb'
+    - 'ansible/*'

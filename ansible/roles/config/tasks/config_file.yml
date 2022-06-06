@@ -1,0 +1,13 @@
+---
+
+- name: 'set temp variable with configuration'
+  set_fact:
+    config_name: '{{ item }}'
+- name: 'create configuration files'
+  become: true
+  template:
+    src: 'config.sh.j2'
+    dest: '{{ configs.homelab.config_path }}/{{ item }}_config.sh'
+    owner: 'root'
+    group: 'root'
+    mode: '0755'

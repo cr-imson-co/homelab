@@ -1,0 +1,107 @@
+---
+
+- name: 'manage certpackage service'
+  become: true
+  block:
+  - name: 'manage certsync user'
+    user:
+      name: '{{ certsync_user }}'
+      password: '!'
+      shell: '/bin/bash'
+      create_home: true
+      state: 'present'
+      update_password: 'on_create'
+
+  - name: 'manage certsync user groups'
+    user:
+      name: '{{ certsync_user }}'
+      append: true
+      groups:
+      - 'users'
+      - 'ssh-enabled'
+
+  - name: 'manage certsync user .ssh directory'
+    file:
+      state: 'directory'
+      path: '/home/{{ certsync_user }}/.ssh/'
+      owner: '{{ certsync_user }}'
+      group: '{{ certsync_group }}'
+      mode: '0700'
+
+  - name: 'get latest certsync keys checksum' # noqa 301
+    become: false
+    local_action:
+      module: 'shell'
+      cmd: >
+        curl -s --head "{{ certsync_keys_url }}"
+          | grep x-gitlab-content-sha256
+          | awk "{print \$2}"
+      warn: false
+    register: 'certsync_keys_checksum'
+
+  - name: 'get local certsync keys checksum'
+    stat:
+      path: '/home/{{ certsync_user }}/.ssh/authorized_keys'
+      checksum_algorithm: 'sha256'
+    register: 'local_certsync_keys_checksum'
+    changed_when: 'not local_certsync_keys_checksum.stat.exists or local_certsync_keys_checksum.stat.checksum != certsync_keys_checksum.stdout'
+
+  - name: 'update certsync keys'
+    block:
+    - name: 'create local temp file' # noqa 305
+      become: false
+      local_action:
+        module: 'shell'
+        cmd: 'mktemp'
+      register: 'certsync_temp'
+    - name: 'download latest certsync keys'
+      become: false
+      local_action:
+        module: 'get_url'
+        url: 'https://gitlab.cr.imson.co/cr.imson.co/ssh-keys/-/raw/master/certsync_keys'
+        dest: '{{ certsync_temp.stdout }}'
+    - name: 'upload latest certsync keys'
+      copy:
+        src: '{{ certsync_temp.stdout }}'
+        dest: '/home/{{ certsync_user }}/.ssh/authorized_keys'
+        owner: '{{ certsync_user }}'
+        group: '{{ certsync_group }}'
+        mode: '0700'
+    - name: 'delete temp file'
+      become: false
+      local_action:
+        module: 'file'
+        path: '{{ certsync_temp.stdout }}'
+        state: 'absent'
+    when: 'local_certsync_keys_checksum.changed'
+
+  - name: 'Copy the certpackage script'
+    copy:
+      src: 'certpackage.sh'
+      dest: '/usr/local/bin/certpackage.sh'
+      owner: 'root'
+      group: 'staff'
+      mode: '0740'
+
+  - name: 'Copy the certpackage service'
+    copy:
+      src: 'certpackage.service'
+      dest: '/etc/systemd/system/certpackage.service'
+      owner: 'root'
+      group: 'root'
+      mode: '0644'
+
+  - name: 'Copy the certpackage timer'
+    copy:
+      src: 'certpackage.timer'
+      dest: '/etc/systemd/system/certpackage.timer'
+      owner: 'root'
+      group: 'root'
+      mode: '0644'
+
+  - name: 'Start and enable certpackage timer'
+    systemd:
+      name: 'certpackage'
+      daemon_reload: true
+      enabled: true
+      state: 'started'

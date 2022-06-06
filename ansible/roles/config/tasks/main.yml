@@ -1,0 +1,74 @@
+---
+
+- name: 'load local config'
+  block:
+  - name: 'slurp local config'
+    delegate_to: '127.0.0.1'
+    slurp:
+      src: 'configs/{{ ansible_hostname }}.conf.json'
+    register: 'imported_config'
+  - name: 'load configs as json'
+    set_fact:
+      configs: '{{ imported_config.content | b64decode | from_json }}'
+
+- name: 'handle system automation config files'
+  become: true
+  block:
+  - name: 'manage config directory'
+    file:
+      state: 'directory'
+      path: '{{ configs.homelab.config_path }}'
+      owner: 'root'
+      group: 'root'
+      mode: '0755'
+  - name: 'deploy configs.json'
+    copy:
+      src: 'configs/{{ ansible_hostname }}.conf.json'
+      dest: '{{ configs.homelab.config_path }}/configs.json'
+      owner: 'root'
+      group: 'root'
+      mode: '0755'
+  - name: 'build configuration files'
+    include_tasks: 'config_file.yml'
+    loop:
+    - 'global'
+    - 'homelab'
+    - 'backup'
+    - 'docker'
+    - 'certsync'
+    - 'mount'
+  - name: 'check for local secrets file'
+    become: false
+    local_action:
+      module: 'stat'
+      path: './secrets.json'
+    register: 'local_homelab_secrets'
+  - name: 'deploy secrets file'
+    copy:
+      src: './secrets.json'
+      dest: '{{ configs.homelab.config_path }}/secrets.json'
+      owner: 'root'
+      group: 'root'
+      mode: '0700'
+    when: 'local_homelab_secrets.stat.exists'
+  - name: 'check for secrets file presence'
+    stat:
+      path: '{{ configs.homelab.config_path }}/secrets.json'
+    register: 'homelab_secrets'
+  - name: 'build secrets configuration file'
+    block:
+    - name: 'slurp secrets file'
+      slurp:
+        src: '{{ configs.homelab.config_path }}/secrets.json'
+      register: 'imported_secrets'
+    - name: 'load secrets file'
+      set_fact:
+        secrets: '{{ imported_secrets.content | b64decode | from_json }}'
+    - name: 'create secrets file'
+      template:
+        src: 'secrets_config.sh.j2'
+        dest: '{{ configs.homelab.config_path }}/secrets_config.sh'
+        owner: 'root'
+        group: 'root'
+        mode: '0700'
+    when: 'homelab_secrets.stat.exists'

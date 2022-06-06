@@ -1,0 +1,32 @@
+---
+
+- name: 'manage mount-check service'
+  become: true
+  block:
+  - name: 'deploy mount-check script'
+    copy:
+      src: 'mount-check.sh'
+      dest: '{{ configs.global.local_bin_path }}/mount-check.sh'
+      owner: 'root'
+      group: 'staff'
+      mode: '0740'
+  - name: 'deploy mount-check systemd service'
+    copy:
+      src: 'mount-check.service'
+      dest: '{{ configs.global.systemd_unit_path }}/mount-check.service'
+      owner: 'root'
+      group: 'root'
+      mode: '0644'
+    register: 'mount_check_service'
+  - name: 'deploy mount-check systemd timer'
+    copy:
+      src: 'mount-check.timer'
+      dest: '{{ configs.global.systemd_unit_path }}/mount-check.timer'
+      owner: 'root'
+      group: 'root'
+      mode: '0644'
+    register: 'mount_check_timer'
+  - name: 'systemd daemon-reload'
+    systemd:
+      daemon_reload: true
+    when: 'mount_check_service.changed or mount_check_timer.changed'

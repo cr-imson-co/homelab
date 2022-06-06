@@ -1,0 +1,7 @@
+[Unit]
+Description=Package Lets-Encrypt Certificates for sync.
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/certpackage.sh
+PrivateTmp=true

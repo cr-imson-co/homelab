@@ -1,0 +1,62 @@
+---
+
+# just because of "MUh bEst PRaCTicEs"
+
+skip_list:
+#
+# ansible.builtin.tempfile is fucking useless. don't even bring it up.
+#   all it does is fucking wrap mktemp and add FUCKING NOTHING OF VALUE.
+#
+# it won't even clean up the temp file after the playbook run is done.
+# see: https://github.com/ansible/ansible/issues/25145
+#
+# there is literally nothing of value with it. it's just one more thing
+#   that could randomly break underneath you because some fuckwit of a
+#   glorified-webdesigner-turned-devderps-engineer decided that the current
+#   methodology isn't "fashionable" anymore and needs to arbitrarily change.
+#
+#- 'command-instead-of-module'
+# note for above: ignoring the warning at the site is preferable due to other warnings that may occur
+
+#
+# fuck you, ansible-lint.
+#
+# you do not just get to make "local_action" a linter warning and say
+#   "it's deprecated".
+#
+# this rule is not something that anyone with more than three fucking
+#   braincells should consider valid. either the ansible project itself
+#   declares it deprecated, or it isn't deprecated at all.
+#
+# https://github.com/ansible-community/ansible-lint/issues/475
+#
+# all ansible-lint says is "don't use it". there is no documentation as
+#   to *why*. it's just "deprecated", except it fucking isn't!
+#
+# https://docs.ansible.com/ansible/latest/user_guide/playbooks_delegation.html#delegating-tasks
+#
+# additionally, the *ANSIBLE* documentation states that it is a
+#   "a shorthand syntax that you can use on a per-task basis"
+#
+# that doesn't sound to me like it it's deprecated.
+# that sounds to me like some arrogant fuckwit mouth-breather decided
+#   to bikeshed. because it doesn't. look. pretty.
+#
+# it's not like its purpose could be easily mistaken either.
+#   "local_action" directly implies that it will happen LOCALLY.
+# "delegate_to: 127.0.0.1" implies the same thing, except in
+#   an (apparently) more-desired obtuse fashion.
+#
+# so fuck you, ansible-lint.
+#
+- 'deprecated-local-action'
+
+#
+# One-off handlers result in worse code in the end, quite frankly.
+#
+# Separating pieces and making the flow of execution harder to follow is a significant antipattern.
+#   If they were reused heavily, sure, great, do that. But if it's only being used once,
+#   it's just another action.  Seriously, it seems that the concept of "nuance" is lost on
+#   the maintainers ansible-lint.
+#
+- 'no-handler'

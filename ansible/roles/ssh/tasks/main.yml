@@ -1,0 +1,42 @@
+---
+
+- name: 'manage sshd configuration'
+  become: true
+  block:
+  - name: 'manage ssh-enabled group'
+    group:
+      name: 'ssh-enabled'
+      state: 'present'
+
+  - name: 'manage sshd config'
+    copy:
+      dest: '/etc/ssh/sshd_config'
+      content: |
+        Port 4
+        Protocol 2
+        UsePAM yes
+        AllowGroups ssh-enabled
+        Compression yes
+        DebianBanner no
+        DisableForwarding yes
+        IgnoreRhosts yes
+        PrintMotd no
+        PasswordAuthentication no
+        PermitEmptyPasswords no
+        PermitRootLogin no
+        MaxSessions 5
+        MaxAuthTries 3
+        X11Forwarding no
+        AcceptEnv LANG
+        AcceptEnv LC_*
+        Subsystem sftp /usr/lib/openssh/sftp-server
+        ChallengeResponseAuthentication no
+      mode: '0644'
+    register: 'sshd_config'
+
+  - name: 'restart sshd service'
+    service:
+      name: 'ssh'
+      state: 'restarted'
+      enabled: true
+    when: 'sshd_config.changed'

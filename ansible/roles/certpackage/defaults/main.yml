@@ -1,0 +1,4 @@
+---
+certsync_user: 'certsync'
+certsync_group: 'certsync'
+certsync_keys_url: 'https://gitlab.cr.imson.co/api/v4/projects/107/repository/files/certsync_keys?ref=master'

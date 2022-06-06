@@ -1,0 +1,33 @@
+---
+
+- name: 'configure pihole'
+  become: true
+  block:
+  - name: 'create lighttpd service config dir'
+    file:
+      state: 'directory'
+      path: '/etc/systemd/system/lighttpd.service.d'
+      owner: 'root'
+      group: 'root'
+      mode: '0755'
+
+  - name: 'deploy lighttpd config to set cors configuration'
+    copy:
+      src: 'lighttpd.environ.conf'
+      dest: '/etc/systemd/system/lighttpd.service.d/environ.conf'
+      owner: 'root'
+      group: 'root'
+      mode: '0644'
+
+  - name: 'deploy dns entries for lan'
+    copy:
+      src: '02-lan.conf'
+      dest: '/etc/dnsmasq.d/02-lan.conf'
+      owner: 'root'
+      group: 'root'
+      mode: '0644'
+    register: 'dns_update'
+
+  - name: 'restart dns'
+    command: 'pihole restartdns'
+    when: 'dns_update.changed'

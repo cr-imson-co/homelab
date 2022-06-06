@@ -1,0 +1,120 @@
+---
+
+- name: 'install and configure some raspi-specific things'
+  become: true
+  block:
+  # removing some dumb raspi-os files
+  - name: 'cleanup unneeded profile.d files'
+    file:
+      path: '/etc/profile.d/{{ item }}'
+      state: 'absent'
+    with_items:
+      - 'sshpwd.sh'
+      - 'wifi-check.sh'
+
+  - name: 'check if i2c is enabled'
+    become: false
+    shell: 'ls -d /dev/i2c*'
+    failed_when: false
+    changed_when: 'i2c_enabled.rc != 0'
+    register: 'i2c_enabled'
+
+  - name: 'enable i2c interface' # noqa 503
+    command: 'raspi-config nonint do_i2c 0'
+    when: 'i2c_enabled.changed'
+
+  - name: 'install wiring package for display support'
+    apt:
+      install_recommends: false
+      name:
+      - 'wiringpi'
+      state: 'present'
+
+  - name: 'check if rpi OLED display binary is installed'
+    become: false
+    stat:
+      path: '/usr/local/bin/display'
+    register: 'oled_display'
+
+  - name: 'install rpi OLED display binary'
+    block:
+      - name: 'get rpi OLED display repo'
+        become: false
+        git:
+          accept_hostkey: true
+          version: 'deploy'
+          repo: 'https://gitlab.cr.imson.co/cr.imson.co/U6143_ssd1306.git'
+          dest: '/home/{{ ansible_user }}/U6143_ssd1306/'
+          clone: true
+          update: false
+          depth: 1
+
+      - name: 'compile rpi OLED display binary'
+        become: false
+        shell:
+          chdir: '/home/{{ ansible_user }}/U6143_ssd1306/C/'
+          cmd: 'make clean && make'
+
+      - name: 'copy rpi OLED display binary'
+        copy:
+          remote_src: true
+          src: '/home/{{ ansible_user }}/U6143_ssd1306/C/display'
+          dest: '/usr/local/bin/display'
+          owner: 'root'
+          group: 'root'
+          mode: '0755'
+
+      - name: 'copy rpi OLED display systemd service'
+        copy:
+          remote_src: true
+          src: '/home/{{ ansible_user }}/U6143_ssd1306/contrib/U6143_ssd1306.service'
+          dest: '/etc/systemd/system/U6143_ssd1306.service'
+          owner: 'root'
+          group: 'root'
+          mode: '0755'
+
+      - name: 'reload systemd daemons'
+        command: 'systemctl daemon-reload'
+
+      - name: 'start rpi OLED display systemd service'
+        command: 'systemctl enable --now U6143_ssd1306.service'
+    when: 'not oled_display.stat.exists'
+
+  - name: 'cleanup rpi OLED display repo'
+    become: false
+    file:
+      path: '/home/{{ ansible_user }}/U6143_ssd1306/'
+      state: 'absent'
+
+  - name: 'check if microsoft repository exists'
+    become: false
+    stat:
+      path: '/etc/apt/sources.list.d/vscode.list'
+      get_md5: false
+    register: 'ms_repo_present'
+
+  - name: 'disable microsoft repository metadata'
+    block:
+      - name: 'disable the vscode repository'
+        become: true
+        lineinfile:
+          dest: '/etc/apt/sources.list.d/vscode.list'
+          regexp: '^(deb\s.+)'
+          line: '# \1'
+          backrefs: true
+          state: 'present'
+
+      - name: 'prevent the vscode repository file from being modified'
+        become: true
+        file:
+          path: '/etc/apt/sources.list.d/vscode.list'
+          attributes: '+i'
+        register: vscode_chattr
+        changed_when: "'i' not in vscode_chattr.diff.before.attributes"
+
+      - name: 'remove the microsoft gpg key'
+        become: true
+        file:
+          path: '/etc/apt/trusted.gpg.d/microsoft.gpg'
+          state: 'absent'
+    when: 'ms_repo_present.stat.exists'

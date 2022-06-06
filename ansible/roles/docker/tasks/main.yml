@@ -1,0 +1,38 @@
+---
+
+- name: 'manage and install docker-ce'
+  become: true
+  block:
+  - name: 'install docker-ce dependencies'
+    apt:
+      install_recommends: false
+      name:
+      - 'acl'
+      - 'ca-certificates'
+      - 'curl'
+      - 'gnupg'
+      - 'lsb-release'
+      - 'python3-apt' # required for ansible apt_repository call
+      state: 'present'
+
+  - name: 'Add the docker apt signing key'
+    apt_key:
+      url: 'https://download.docker.com/linux/{{ ansible_distribution | lower }}/gpg'
+      state: 'present'
+
+  - name: 'Add the docker repository'
+    apt_repository:
+      filename: 'docker'
+      repo: 'deb [arch=amd64] https://download.docker.com/linux/{{ ansible_distribution | lower }} {{ ansible_distribution_release | lower }} stable'
+
+  - name: 'install docker-ce dependencies'
+    apt:
+      install_recommends: false
+      name:
+      - 'docker-ce'
+      - 'docker-ce-cli'
+      - 'containerd.io'
+      - 'docker-compose-plugin'
+      state: 'present'
+
+# todo: installation of docker-compose latest from github?

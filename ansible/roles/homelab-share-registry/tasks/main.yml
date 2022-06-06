@@ -1,0 +1,48 @@
+---
+
+- name: 'manage and configure registry network mount'
+  become: true
+  block:
+  - name: 'set common template variables'
+    set_fact:
+      # credentials (MUST be cleared after run)
+      samba_username: '{{ secrets.samba_gitlab_registry_username }}'
+      samba_password: '{{ secrets.samba_gitlab_registry_password }}'
+      # mount vars
+      remote_mount_name: 'registry'
+      mount_name: 'registry'
+      cred_name: 'registry'
+      mount_options: ',uid=998,gid=998,file_mode=0700,dir_mode=0700'
+    no_log: true
+  - name: 'create mount path'
+    file:
+      state: 'directory'
+      path: '{{ configs.global.mount_path }}/{{ mount_name }}'
+      owner: 998
+      group: 998
+      mode: '0700'
+  - name: 'deploy systemd mount unit'
+    template:
+      src: 'unit.mount.j2'
+      dest: '{{ configs.global.systemd_unit_path }}/mnt-{{ mount_name }}.mount'
+      owner: 'root'
+      group: 'root'
+      mode: '0644'
+  - name: 'deploy samba credential file'
+    template:
+      src: 'samba_credentials.j2'
+      dest: '{{ configs.mount.samba_credentials_path }}/{{ cred_name }}'
+      owner: 'root'
+      group: 'root'
+      mode: '0600'
+    no_log: true
+  - name: 'clear credential variables'
+    set_fact:
+      samba_username: ''
+      samba_password: ''
+  - name: 'Start and enable network mount'
+    systemd:
+      name: 'mnt-{{ mount_name }}.mount'
+      daemon_reload: true
+      enabled: true
+      state: 'started'

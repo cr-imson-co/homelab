@@ -1,0 +1,69 @@
+---
+
+- name: 'handle system initial configuration'
+  become: true
+  block:
+  - name: 'update package cache'
+    apt:
+      update_cache: true
+      force_apt_get: true
+      cache_valid_time: 3600
+
+  - name: 'manage sudoers'
+    copy:
+      dest: '/etc/sudoers.d/01-ansible'
+      content: |
+        # Allow the ansible group to run sudo (ALL) with NOPASSWD
+        %{{ devops_group }}       ALL=(ALL)       NOPASSWD: ALL
+      owner: 'root'
+      group: 'root'
+      mode: '0440'
+
+  - name: 'manage motd'
+    copy:
+      dest: '/etc/motd'
+      content: |
+        -------------------------------------------------------------------------------
+                        UNAUTHORIZED ACCESS TO THIS DEVICE IS PROHIBITED
+        -------------------------------------------------------------------------------
+              You must have explicit, authorized permission to access this device.
+                Unauthorized attempts and actions to access or use this system may
+                          result in civil and/or criminal penalties.
+              Any activities performed on this device may be logged and monitored.
+        -------------------------------------------------------------------------------
+      mode: '0644'
+
+  - name: 'disable ubuntu dynamic motd garbage'
+    when: 'ansible_distribution == "Ubuntu"'
+    block:
+    - name: 'remove motd.dynamic reference from login pam file'
+      lineinfile:
+        path: '/etc/pam.d/login'
+        regexp: '(?i)^(session    optional     pam_motd.so  motd=/run/motd.dynamic)'
+        line: '# \1'
+        backrefs: true
+        state: 'present'
+    - name: 'remove motd.dynamic reference from sshd pam file'
+      lineinfile:
+        path: '/etc/pam.d/sshd'
+        regexp: '(?i)^(session    optional     pam_motd.so  motd=/run/motd.dynamic)'
+        line: '# \1'
+        backrefs: true
+        state: 'present'
+    - name: 'stop and disable motd-news.timer'
+      service:
+        name: 'motd-news.timer'
+        state: 'stopped'
+        enabled: false
+
+  - name: 'manage ssh-enabled group'
+    group:
+      name: 'ssh-enabled'
+      state: 'present'
+
+  - name: 'ensure current ansible user has ssh-enabled group'
+    user:
+      name: '{{ ansible_user }}'
+      append: true
+      groups:
+      - 'ssh-enabled'

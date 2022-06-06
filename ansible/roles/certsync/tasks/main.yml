@@ -1,0 +1,93 @@
+---
+
+- name: 'manage certsync group'
+  become: true
+  group:
+    name: '{{ certsync_group }}'
+    state: 'present'
+
+- name: 'manage certpackage service'
+  become: true
+  block:
+  - name: 'manage certsync user'
+    become: true
+    user:
+      name: '{{ certsync_user }}'
+      group: '{{ certsync_group }}'
+      password: '!'
+      shell: '/bin/bash'
+      create_home: true
+      state: 'present'
+      update_password: 'on_create'
+
+  - name: 'manage certsync user groups'
+    become: true
+    user:
+      name: '{{ certsync_user }}'
+      append: true
+      groups:
+      - 'users'
+
+  - name: 'manage certsync user .ssh directory'
+    file:
+      state: 'directory'
+      path: '/home/{{ certsync_user }}/.ssh/'
+      owner: '{{ certsync_user }}'
+      group: '{{ certsync_group }}'
+      mode: '0700'
+
+  - name: 'check ssh key file existence for certsync'
+    become: true
+    stat:
+      path: '/home/{{ certsync_user }}/.ssh/id_ed25519'
+    register: 'certsync_ssh_key'
+
+  - name: 'notify admin of additional manual configuration if necessary'
+    debug:
+      msg: 'administrator must configure certsync user with ssh key, then add to the ssh-keys repository for deployment'
+    when: 'not certsync_ssh_key.stat.exists'
+
+  - name: 'Copy the certfetch script'
+    become: true
+    copy:
+      src: 'certfetch.sh'
+      dest: '/usr/local/bin/certfetch.sh'
+      owner: 'root'
+      group: 'staff'
+      mode: '0740'
+
+  - name: 'Copy the certsync script'
+    become: true
+    copy:
+      src: 'certsync.sh'
+      dest: '/usr/local/bin/certsync.sh'
+      owner: 'root'
+      group: 'staff'
+      mode: '0740'
+
+  - name: 'Copy the certsync service'
+    become: true
+    copy:
+      src: 'certsync.service'
+      dest: '/etc/systemd/system/certsync.service'
+      owner: 'root'
+      group: 'root'
+      mode: '0644'
+
+  - name: 'Copy the certsync timer'
+    become: true
+    copy:
+      src: 'certsync.timer'
+      dest: '/etc/systemd/system/certsync.timer'
+      owner: 'root'
+      group: 'root'
+      mode: '0644'
+
+  - name: 'Start and enable certsync timer'
+    become: true
+    systemd:
+      name: 'certsync'
+      daemon_reload: true
+      enabled: true
+      state: 'started'
+    when: 'certsync_ssh_key.stat.exists and configs.certsync.enable is defined and configs.certsync.enable == "true"'
