@@ -3,7 +3,15 @@
     "tmp_path": "/tmp",
     "systemd_unit_path": "/etc/systemd/system",
     "local_bin_path": "/usr/local/bin",
-    "mount_path": "/mnt"
+    "mount_path": "/mnt",
+    "config_list": [
+      "global",
+      "homelab",
+      "backup",
+      "docker",
+      "certsync",
+      "mount"
+    ]
   },
   "homelab": {
     "config_path": "/srv/homelab"
@@ -25,10 +33,8 @@
     "remote_server": "comet.odios.us",
     "unpack_path": "/tmp/le-certs",
     "deploy_path": "/etc/nginx/certs",
-    "remote_path": "/home/certsync",
-    "enable": "false"
+    "remote_path": "/home/certsync"
   },
-  "certwarn": {},
   "backup": {
     "dest_path": "/mnt/backup",
     "staging_path": "/opt/volume-backup",

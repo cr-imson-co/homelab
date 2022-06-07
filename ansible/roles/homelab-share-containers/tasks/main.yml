@@ -3,6 +3,11 @@
 - name: 'manage and configure containers network mount'
   become: true
   block:
+  - name: 'install required packages'
+    apt:
+      install_recommends: false
+      name:
+      - 'cifs-utils'
   - name: 'set common template variables'
     set_fact:
       # credentials (MUST be cleared after run)
@@ -11,7 +16,7 @@
       samba_username: '{{ secrets.samba_gitlab_registry_username }}'
       samba_password: '{{ secrets.samba_gitlab_registry_password }}'
       # mount vars
-      remote_mount_name: 'containers'
+      remote_mount_name: 'registry/containers'
       mount_name: 'containers'
       cred_name: 'registry'
       mount_options: ',uid=993,gid=993,file_mode=0700,dir_mode=0700'
@@ -21,8 +26,15 @@
       state: 'directory'
       path: '{{ configs.global.mount_path }}/{{ mount_name }}'
       #! note: also specific to this mount
-      owner: 993
-      group: 993
+      owner: '993' # uid/gid 993
+      group: '993' # uid/gid 993
+      mode: '0700'
+  - name: 'create samba credentials path'
+    file:
+      state: 'directory'
+      path: '{{ configs.mount.samba_credentials_path }}'
+      owner: 'root'
+      group: 'root'
       mode: '0700'
   - name: 'deploy systemd mount unit'
     template:

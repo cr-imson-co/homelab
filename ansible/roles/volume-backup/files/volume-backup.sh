@@ -79,6 +79,7 @@ for _VOLUME in $VOLUMES; do
 
   echo :: backing up "$VOLUME" to staging directory
   docker run -v "$VOLUME":/volume -v "$BACKUP_STAGING_PATH":/backup --rm --log-driver none loomchild/volume-backup backup "$VOLUME"
+  docker inspect "$VOLUME" -f "{{json .Labels}}" > "${VOLUME}.labels.json"
 
   hook backup-volume "$BACKUP_STAGING_PATH" "$VOLUME"
 done

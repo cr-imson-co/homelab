@@ -3,6 +3,7 @@
 
 - hosts: 'aws'
   roles:
+  - 'config'
   - 'common'
   - 'disable-init-user'
   - 'updates'
@@ -11,3 +12,8 @@
   - 'admin'
   - 'docker'
   - 'docker-stack'
+
+- hosts: 'comet.cr.imson.co'
+  roles:
+  - 'certpackage'
+  - 'docker-nginx'

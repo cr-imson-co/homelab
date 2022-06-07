@@ -53,8 +53,8 @@
       src: 'certfetch.sh'
       dest: '/usr/local/bin/certfetch.sh'
       owner: 'root'
-      group: 'staff'
-      mode: '0740'
+      group: '{{ certsync_group }}'
+      mode: '0750'
 
   - name: 'Copy the certsync script'
     become: true

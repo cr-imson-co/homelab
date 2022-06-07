@@ -15,15 +15,28 @@
       - 'python3-apt' # required for ansible apt_repository call
       state: 'present'
 
+  - name: 'Remove docker apt signing key from main keyring'
+    apt_key:
+      id: '9DC858229FC7DD38854AE2D88D81803C0EBFCD88'
+      state: 'absent'
+
+  - name: 'Remove generic docker repository entry'
+    apt_repository:
+      filename: 'docker'
+      repo: 'deb [arch=amd64] https://download.docker.com/linux/{{ ansible_distribution | lower }} {{ ansible_distribution_release | lower }} stable'
+      state: 'absent'
+
   - name: 'Add the docker apt signing key'
     apt_key:
       url: 'https://download.docker.com/linux/{{ ansible_distribution | lower }}/gpg'
       state: 'present'
+      keyring: '/usr/share/keyrings/docker-archive-keyring.gpg'
 
   - name: 'Add the docker repository'
     apt_repository:
       filename: 'docker'
-      repo: 'deb [arch=amd64] https://download.docker.com/linux/{{ ansible_distribution | lower }} {{ ansible_distribution_release | lower }} stable'
+      repo: 'deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/{{ ansible_distribution | lower }} {{ ansible_distribution_release | lower }} stable'
+      state: 'present'
 
   - name: 'install docker-ce dependencies'
     apt:

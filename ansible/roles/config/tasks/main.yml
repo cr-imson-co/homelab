@@ -30,22 +30,16 @@
       mode: '0755'
   - name: 'build configuration files'
     include_tasks: 'config_file.yml'
-    loop:
-    - 'global'
-    - 'homelab'
-    - 'backup'
-    - 'docker'
-    - 'certsync'
-    - 'mount'
+    loop: '{{ configs.global.config_list }}'
   - name: 'check for local secrets file'
     become: false
     local_action:
       module: 'stat'
-      path: './secrets.json'
+      path: 'secrets/{{ ansible_hostname }}.secrets.json'
     register: 'local_homelab_secrets'
   - name: 'deploy secrets file'
     copy:
-      src: './secrets.json'
+      src: 'secrets/{{ ansible_hostname }}.secrets.json'
       dest: '{{ configs.homelab.config_path }}/secrets.json'
       owner: 'root'
       group: 'root'

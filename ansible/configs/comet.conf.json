@@ -1,0 +1,31 @@
+{
+  "global": {
+    "tmp_path": "/tmp",
+    "systemd_unit_path": "/etc/systemd/system",
+    "local_bin_path": "/usr/local/bin",
+    "mount_path": "/mnt",
+    "config_list": [
+      "global",
+      "homelab",
+      "docker"
+    ]
+  },
+  "homelab": {
+    "config_path": "/srv/homelab"
+  },
+  "docker": {
+    "config_path": "/srv/docker/.docker",
+    "project_name": "docker",
+    "yml_filename": "docker-compose.yml",
+    "yml_path": "/srv/docker",
+    "hook_path": "/srv/docker/hooks",
+    "scripts_path": "/srv/docker"
+  },
+  "nginx": {
+    "root_path": "/etc/nginx",
+    "certs_path": "/etc/nginx/certs",
+    "vhost_path": "/etc/nginx/vhost.d",
+    "htpasswd_path": "/etc/nginx/htpasswd",
+    "html_path": "/srv/html"
+  }
+}

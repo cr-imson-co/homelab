@@ -1,8 +1,8 @@
 [Unit]
 Description=Certificate sync
-ConditionACPower=true
 After=network-online.target
 Wants=network-online.target
+OnFailure=failure-notification@certsync.service
 
 [Service]
 Type=oneshot

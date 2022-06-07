@@ -22,5 +22,6 @@
       - 'unzip'
       - 'tar'
       - 'curl'
-      - 'python3.9'
+      # - 'python3.9'
+      # todo: upgrade all systems to distros that include python3.9...
       state: 'present'

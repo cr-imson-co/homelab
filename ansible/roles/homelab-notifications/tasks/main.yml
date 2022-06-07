@@ -28,7 +28,7 @@
   - name: 'deploy notification script'
     copy:
       src: 'failure-notification@.service'
-      dest: '{{ configs.global.local_bin_path }}/failure-notification@.service'
+      dest: '{{ configs.global.systemd_unit_path }}/failure-notification@.service'
       owner: 'root'
       group: 'root'
       mode: '0644'

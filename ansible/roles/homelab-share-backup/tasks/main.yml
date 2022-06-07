@@ -3,6 +3,11 @@
 - name: 'manage and configure backup network mount'
   become: true
   block:
+  - name: 'install required packages'
+    apt:
+      install_recommends: false
+      name:
+      - 'cifs-utils'
   - name: 'set common template variables'
     set_fact:
       # credentials (MUST be cleared after run)
@@ -21,6 +26,13 @@
       owner: 'root'
       group: 'root'
       mode: '0755'
+  - name: 'create samba credentials path'
+    file:
+      state: 'directory'
+      path: '{{ configs.mount.samba_credentials_path }}'
+      owner: 'root'
+      group: 'root'
+      mode: '0700'
   - name: 'deploy systemd mount unit'
     template:
       src: 'unit.mount.j2'

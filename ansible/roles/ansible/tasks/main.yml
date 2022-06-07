@@ -44,7 +44,7 @@
     local_action:
       module: 'shell'
       cmd: >
-        curl -s --head "https://gitlab.cr.imson.co/api/v4/projects/107/repository/files/ansible_keys?ref=master" \
+        curl -s --head "{{ ansible_keys_url }}" \
           | grep x-gitlab-content-sha256 \
           | awk "{print \$2}"
       warn: false
