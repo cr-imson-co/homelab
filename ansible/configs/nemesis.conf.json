@@ -1,5 +1,6 @@
 {
   "global": {
+    "system_name": "nemesis",
     "tmp_path": "/tmp",
     "systemd_unit_path": "/etc/systemd/system",
     "local_bin_path": "/usr/local/bin",
