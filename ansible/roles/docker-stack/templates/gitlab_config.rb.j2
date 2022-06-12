@@ -1,0 +1,45 @@
+external_url 'https://gitlab.cr.imson.co';
+
+# we have cert rotation already handled, thx
+letsencrypt['enable'] = false;
+
+# we have the main nginx-proxy to handle TLS termination already, thx
+nginx['listen_port'] = 80;
+nginx['listen_https'] = false;
+
+# adjust max body size upward to allow things to keep working
+nginx['client_max_body_size'] = '100m';
+
+# - container registry
+registry['enable'] = true;
+registry_external_url 'https://containers.cr.imson.co';
+# registry['debug_addr'] = 'localhost:5001';
+registry_nginx['listen_port'] = 80;
+registry_nginx['listen_https'] = false;
+gitlab_rails['registry_path'] = '/mnt/containers';
+
+# - dependency proxy
+gitlab_rails['dependency_proxy_enabled'] = true;
+gitlab_rails['dependency_proxy_storage_path'] = '/mnt/registry/dependencies';
+
+# - package registry
+gitlab_rails['packages_enabled'] = true;
+gitlab_rails['packages_storage_path'] = '/mnt/registry/packages';
+
+# - git lfs
+gitlab_rails['lfs_enabled'] = true;
+gitlab_rails['lfs_storage_path'] = '/mnt/registry/lfs';
+
+# - smtp
+gitlab_rails['smtp_enable'] = true;
+gitlab_rails['smtp_tls'] = true;
+gitlab_rails['smtp_port'] = 465;
+gitlab_rails['smtp_address'] = '{{ secrets.homelab_smtp_server }}';
+gitlab_rails['smtp_user_name'] = '{{ secrets.homelab_smtp_username }}';
+gitlab_rails['smtp_password'] = '{{ secrets.homelab_smtp_password }}';
+gitlab_rails['smtp_domain'] = '{{ secrets.homelab_smtp_domain }}';
+gitlab_rails['smtp_authentication'] = 'login';
+gitlab_rails['smtp_enable_starttls_auto'] = true;
+gitlab_rails['smtp_openssl_verify_mode'] = 'peer';
+gitlab_rails['gitlab_email_from'] = 'homelab@{{ secrets.homelab_smtp_domain }}';
+gitlab_rails['gitlab_email_reply_to'] = 'noreply@{{ secrets.homelab_smtp_domain }}';

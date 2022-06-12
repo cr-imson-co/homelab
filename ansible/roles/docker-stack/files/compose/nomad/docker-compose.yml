@@ -166,24 +166,7 @@ services:
       CERT_NAME: 'cr.imson.co'
       SSL_POLICY: 'Mozilla-Intermediate'
       HTTPS_METHOD: 'redirect'
-      GITLAB_OMNIBUS_CONFIG:
-        external_url 'https://gitlab.cr.imson.co';
-        letsencrypt['enable'] = false;
-        nginx['listen_port'] = 80;
-        nginx['listen_https'] = false;
-        nginx['client_max_body_size'] = '100m';
-        registry['enable'] = true;
-        registry_external_url 'https://containers.cr.imson.co';
-        registry['debug_addr'] = 'localhost:5001';
-        registry_nginx['listen_port'] = 80;
-        registry_nginx['listen_https'] = false;
-        gitlab_rails['registry_path'] = '/mnt/containers';
-        gitlab_rails['dependency_proxy_enabled'] = true;
-        gitlab_rails['dependency_proxy_storage_path'] = '/mnt/registry/dependencies';
-        gitlab_rails['packages_enabled'] = true;
-        gitlab_rails['packages_storage_path'] = '/mnt/registry/packages';
-        gitlab_rails['lfs_enabled'] = true;
-        gitlab_rails['lfs_storage_path'] = '/mnt/registry/lfs';
+      GITLAB_OMNIBUS_CONFIG: 'from_file("/gitlab_config.rb")'
     networks:
       crimson:
         aliases:
@@ -210,6 +193,10 @@ services:
     - type: 'bind'
       source: '/mnt/containers'
       target: '/mnt/containers'
+    - type: 'bind'
+      source: '/srv/docker/gitlab_config.rb'
+      target: '/gitlab_config.rb'
+      read_only: true
 
   nextcloud_app:
     container_name: 'nextcloud_app'

@@ -1,0 +1,187 @@
+#
+# cr.imson.co
+#
+# Home Lab docker configuration
+# @author Damian Bushong <katana@odios.us>
+#
+
+version: '3.7'
+
+networks:
+  crimson:
+    name: 'crimson'
+
+volumes:
+  keycloak_mariadb_data:
+
+secrets:
+  keycloak_mysql_root_password:
+    file: './keycloak_mysql_root_password'
+  keycloak_mysql_password:
+    file: './keycloak_mysql_password'
+
+services:
+  nginx-proxy:
+    container_name: 'nginx'
+    image: 'nginxproxy/nginx-proxy:latest'
+    restart: 'unless-stopped'
+    logging:
+      driver: 'json-file'
+      options:
+        max-file: '10'
+        max-size: '10m'
+    environment:
+      DEFAULT_HOST: 'cr.imson.co'
+    networks:
+    - 'crimson'
+    ports:
+    - '0.0.0.0:80:80'
+    - '0.0.0.0:443:443'
+    volumes:
+    - type: 'bind'
+      source: '/var/run/docker.sock'
+      target: '/tmp/docker.sock'
+      read_only: true
+    - type: 'bind'
+      source: '/etc/nginx/certs'
+      target: '/etc/nginx/certs'
+      read_only: true
+    - type: 'bind'
+      source: '/etc/nginx/vhost.d'
+      target: '/etc/nginx/vhost.d'
+      read_only: true
+    healthcheck:
+      test: 'service nginx status >/dev/null || exit 1'
+      start_period: '1m'
+      interval: '3m'
+      retries: 3
+
+  nginx:
+    container_name: 'landing_page'
+    image: 'nginx:alpine'
+    restart: 'unless-stopped'
+    logging:
+      driver: 'json-file'
+      options:
+        max-file: '10'
+        max-size: '10m'
+    environment:
+      VIRTUAL_HOST: 'cr.imson.co'
+      CERT_NAME: 'cr.imson.co'
+      SSL_POLICY: 'Mozilla-Intermediate'
+      HTTPS_METHOD: 'redirect'
+    networks:
+      crimson:
+    volumes:
+    - type: 'bind'
+      source: '/srv/html'
+      target: '/usr/share/nginx/html'
+      read_only: true
+    healthcheck:
+      test: 'curl -IsSLf http://localhost/ >/dev/null || exit 1'
+      start_period: '1m'
+      interval: '3m'
+      retries: 3
+
+  keycloak_db:
+    container_name: 'keycloak_db'
+    image: 'mariadb:10.7'
+    restart: 'unless-stopped'
+    logging:
+      driver: 'json-file'
+      options:
+        max-file: '10'
+        max-size: '10m'
+    environment:
+      MYSQL_ROOT_PASSWORD_FILE: '/run/secrets/keycloak_mysql_root_password'
+      MYSQL_DATABASE: 'keycloak'
+      MYSQL_USER: 'keycloak'
+      MYSQL_PASSWORD_FILE: '/run/secrets/keycloak_mysql_password'
+    networks:
+      crimson:
+        aliases:
+        - 'keycloak-db'
+    volumes:
+    - type: 'volume'
+      source: 'keycloak_mariadb_data'
+      target: '/var/lib/mysql'
+    healthcheck:
+      test: 'mysqladmin ping --silent'
+      start_period: '1m'
+      interval: '3m'
+      retries: 3
+    secrets:
+    - 'keycloak_mysql_root_password'
+    - 'keycloak_mysql_password'
+
+  keycloak:
+    container_name: 'keycloak'
+    image: 'containers.cr.imson.co/cr.imson.co/keycloak-custom:18.0.0'
+    restart: 'unless-stopped'
+    logging:
+      driver: 'json-file'
+      options:
+        max-file: '10'
+        max-size: '10m'
+    # cpuset: ${KEYCLOAK_CPUSET:-2-3}
+    mem_limit: '3g'
+    networks:
+      crimson:
+        aliases:
+        - 'keycloak'
+    env_file:
+    - 'keycloak.env'
+    environment:
+      # nginxproxy vars
+      VIRTUAL_HOST: 'sso.cr.imson.co'
+      VIRTUAL_PORT: '8080'
+      CERT_NAME: 'cr.imson.co'
+      SSL_POLICY: 'Mozilla-Intermediate'
+      HTTPS_METHOD: 'redirect'
+      # keycloak env vars
+      KC_DB: 'mariadb'
+      KC_DB_URL: 'jdbc:mariadb://keycloak-db:3306/keycloak'
+      KC_DB_USERNAME: 'keycloak'
+      #! should be defined in `keycloak.env`
+      # KC_DB_PASSWORD: '${KC_DB_PASSWORD}'
+      KEYCLOAK_ADMIN: 'root'
+      #! should be defined in `keycloak.env`
+      # KEYCLOAK_ADMIN_PASSWORD: '${KEYCLOAK_ADMIN_PASSWORD}'
+      KC_HOSTNAME: 'sso.cr.imson.co'
+      JAVA_OPTS: >
+        -Xms64m
+        -Xmx2g
+        -XX:MetaspaceSize=96M
+        -XX:MaxMetaspaceSize=256m
+        -Djava.net.preferIPv4Stack=true
+        -Djboss.modules.system.pkgs=org.jboss.byteman
+        -Djava.awt.headless=true
+    ports:
+    - '8080:8080'
+    - '9990:9990'
+    depends_on:
+    - 'keycloak_db'
+
+
+  portainer_agent:
+    container_name: 'portainer_agent'
+    image: 'portainer/agent:2.13.1'
+    restart: 'unless-stopped'
+    logging:
+      driver: 'json-file'
+      options:
+        max-file: '10'
+        max-size: '10m'
+    environment:
+      AGENT_PORT: 9001
+    networks:
+      crimson:
+    ports:
+    - '0.0.0.0:9001:9001'
+    volumes:
+    - type: 'bind'
+      source: '/var/run/docker.sock'
+      target: '/var/run/docker.sock'
+    - type: 'bind'
+      source: '/var/lib/docker/volumes'
+      target: '/var/lib/docker/volumes'

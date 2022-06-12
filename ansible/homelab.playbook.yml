@@ -1,26 +1,28 @@
 #!/usr/bin/env ansible-playbook
 ---
 
-- hosts: 'nomad.cr.imson.co'
+- hosts: 'homelab'
   roles:
   - 'config'
   - 'certsync'
-  - 'homelab-share-backup'
-  - 'homelab-share-containers'
-  - 'homelab-share-nextcloud'
-  - 'homelab-share-registry'
   - 'docker'
   - 'docker-stack'
   - 'docker-nginx'
+  - 'homelab-share-backup'
   - 'homelab-notifications'
   - 'homelab-landing-page'
-  - 'homelab-reverse-proxy'
-  - 'homelab-homer'
   - 'mount-check'
   - 'mount-space-alert'
+
+- hosts: 'nomad.cr.imson.co'
+  roles:
+  - 'homelab-share-containers'
+  - 'homelab-share-nextcloud'
+  - 'homelab-share-registry'
+  - 'homelab-reverse-proxy'
+  - 'homelab-homer'
   - 'volume-backup'
 
 - hosts: 'rpi.cr.imson.co'
   roles:
-  # - 'config'
   - 'pihole-lan'
