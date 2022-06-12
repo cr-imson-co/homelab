@@ -27,4 +27,4 @@ fi
 FAILING_SERVICE=$1
 set -o nounset
 
-"$GLOBAL_LOCAL_BIN_PATH/notification.sh" failure "The service '$FAILING_SERVICE' has failed."
+"$GLOBAL_LOCAL_BIN_PATH/notification.sh" failure "The unit '$FAILING_SERVICE' has failed."

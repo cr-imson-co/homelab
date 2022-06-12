@@ -31,7 +31,7 @@ MESSAGE=$*
 set -o nounset
 
 "$GLOBAL_LOCAL_BIN_PATH/apprise" \
-  --title "homelab $NOTIFICATION_TYPE event" \
+  --title "${GLOBAL_SYSTEM_NAME}@homelab $NOTIFICATION_TYPE event" \
   --body "$MESSAGE" \
   --notification-type "$NOTIFICATION_TYPE" \
   "$SECRET_APPRISE_NOTIFICATION_URL/?avatar=No&format=markdown&image=No"
