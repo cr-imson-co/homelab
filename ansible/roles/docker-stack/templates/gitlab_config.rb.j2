@@ -10,6 +10,33 @@ nginx['listen_https'] = false;
 # adjust max body size upward to allow things to keep working
 nginx['client_max_body_size'] = '100m';
 
+# - omniauth (sso)
+gitlab_rails['omniauth_allow_single_sign_on'] = ['saml'];
+gitlab_rails['omniauth_block_auto_created_users'] = false;
+gitlab_rails['omniauth_auto_link_saml_user'] = true;
+gitlab_rails['omniauth_providers'] = [
+  {
+    name: 'saml',
+    label: 'sso.cr.imson.co',
+    args: {
+      assertion_consumer_service_url: 'https://gitlab.cr.imson.co/users/auth/saml/callback',
+      idp_cert_fingerprint: '23:07:2E:AB:95:88:D3:7C:3D:F8:A5:8F:D8:BD:A4:D7:47:8A:31:E4',
+      idp_sso_target_url: 'https://sso.cr.imson.co/realms/crimson/protocol/saml/clients/gitlab.cr.imson.co',
+      issuer: 'gitlab.cr.imson.co',
+      name_identifier_format: 'urn:oasis:names:tc:SAML:2.0:nameid-format:persistent',
+      attribute_statements: {
+        first_name: ['first_name'],
+        last_name: ['last_name'],
+        name: ['name'],
+        username: ['name'],
+        email: ['email']
+      },
+      allowed_clock_drift: 60 # 60s drift allowed
+    }
+  }
+];
+# auto_sign_in_with_provider: 'saml';
+
 # - container registry
 registry['enable'] = true;
 registry_external_url 'https://containers.cr.imson.co';

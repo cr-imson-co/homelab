@@ -22,7 +22,7 @@ pushd "$TEMP_REPO_PATH/" > /dev/null
 git clone --depth 1 "$BACKUP_GIT_REPO" .
 
 HOMELAB_REPO_SHA=$(git rev-parse --short HEAD)
-git archive --format=tar master | bzip2 -c > "$BACKUP_STAGING_PATH/homelab-repo.$HOMELAB_REPO_SHA.tar.bz2"
+git archive --format=tar main | bzip2 -c > "$BACKUP_STAGING_PATH/homelab-repo.$HOMELAB_REPO_SHA.tar.bz2"
 
 popd > /dev/null
 
