@@ -1,0 +1,12 @@
+#!/usr/bin/env ansible-playbook
+---
+
+- hosts: 'rpi.cr.imson.co'
+  roles:
+  # - 'config'
+  - 'pihole-lan'
+
+- hosts: 'comet.cr.imson.co'
+  roles:
+  - 'config'
+  - 'pihole-vpn'

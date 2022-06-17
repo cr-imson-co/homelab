@@ -1,0 +1,73 @@
+---
+
+- name: 'manage valheim docker stack'
+  become: true
+  block:
+  - name: 'create valheim config path'
+    file:
+      state: 'directory'
+      path: '{{ configs.valheim.scripts_path }}'
+      owner: 'root'
+      group: 'root'
+      mode: '0755'
+
+  - name: 'create valheim backups path'
+    file:
+      state: 'directory'
+      path: '{{ configs.valheim.backups_path }}'
+      owner: 'root'
+      group: 'docker'
+      mode: '0770'
+
+  - name: 'deploy docker-compose.yml'
+    copy:
+      src: 'compose/docker-compose.yml'
+      dest: '{{ configs.valheim.scripts_path }}/docker-compose.yml'
+      owner: 'root'
+      group: 'docker'
+      mode: '0640'
+
+  - name: 'deploy valheim.env'
+    template:
+      src: 'valheim.env.j2'
+      dest: '{{ configs.valheim.scripts_path }}/valheim.env'
+      owner: 'root'
+      group: 'docker'
+      mode: '0640'
+
+  - name: 'deploy valheim docker stack management scripts'
+    copy:
+      src: '{{ item }}'
+      dest: '{{ configs.valheim.scripts_path }}'
+      owner: 'root'
+      group: 'docker'
+      mode: '0750'
+    with_fileglob:
+    - 'scripts/*'
+
+  - name: 'deploy docker hook directories'
+    file:
+      state: 'directory'
+      path: '{{ configs.docker.hook_path }}/{{ item }}'
+      owner: 'root'
+      group: 'docker'
+      mode: '0770'
+    with_items:
+    - 'pre-start-valheim'
+    - 'post-start-valheim'
+    - 'pre-stop-valheim'
+    - 'post-stop-valheim'
+    - 'pre-update-valheim'
+    - 'post-update-valheim'
+
+  - name: 'deploy valheim hooks'
+    copy:
+      src: 'hooks/{{ item }}'
+      dest: '{{ configs.docker.hook_path }}/{{ item }}'
+      owner: 'root'
+      group: 'docker'
+      mode: '0770'
+    with_items:
+    - 'post-start/valheim.sh'
+    - 'post-stop/valheim.sh'
+    - 'pre-stop/valheim.sh'

@@ -11,7 +11,8 @@
       "backup",
       "docker",
       "certsync",
-      "mount"
+      "mount",
+      "valheim"
     ]
   },
   "homelab": {
@@ -61,5 +62,13 @@
     "vhost_path": "/etc/nginx/vhost.d",
     "htpasswd_path": "/etc/nginx/htpasswd",
     "html_path": "/srv/html"
+  },
+  "valheim": {
+    "root_path": "/srv/valheim",
+    "project_name": "valheim",
+    "yml_filename": "docker-compose.yml",
+    "yml_path": "/srv/valheim",
+    "scripts_path": "/srv/valheim",
+    "backups_path": "/srv/valheim/backups"
   }
 }

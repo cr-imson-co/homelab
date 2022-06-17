@@ -3,14 +3,6 @@
 - name: 'handle admin user configuration'
   become: true
   block:
-  - name: 'get local username' # noqa command-instead-of-shell no-changed-when
-    become: false
-    local_action:
-      module: 'shell'
-      cmd: 'whoami'
-      warn: false
-    register: 'admin_user'
-
   - name: 'download oh-my-zsh' # noqa git-latest
     git:
       accept_hostkey: true
@@ -29,13 +21,13 @@
 
   - name: 'manage admin group'
     group:
-      name: '{{ admin_user.stdout }}'
+      name: '{{ admin_group }}'
       state: 'present'
 
   - name: 'manage admin user'
     user:
-      name: '{{ admin_user.stdout }}'
-      group: '{{ admin_user.stdout }}'
+      name: '{{ admin_user }}'
+      group: '{{ admin_group }}'
       password: '!'
       # note: /bin/zsh is too heavy for the pis, we need to use bash there instead
       shell: '{{ "/bin/zsh" if ansible_architecture == "x86_64" else "/bin/bash" }}'
@@ -45,7 +37,7 @@
 
   - name: 'manage admin user groups'
     user:
-      name: '{{ admin_user.stdout }}'
+      name: '{{ admin_user }}'
       append: true
       groups:
       - 'sudo'
@@ -55,12 +47,24 @@
       - 'ssh-enabled'
       - 'devops'
 
+  - name: 'get available groups'
+    getent:
+      database: 'group'
+
+  - name: 'add docker group to user (if docker group exists)'
+    user:
+      name: '{{ admin_user }}'
+      append: true
+      groups:
+      - 'docker'
+    when: '"docker" in ansible_facts.getent_group'
+
   - name: 'manage admin user .ssh directory'
     file:
       state: 'directory'
-      path: '/home/{{ admin_user.stdout }}/.ssh/'
-      owner: '{{ admin_user.stdout }}'
-      group: '{{ admin_user.stdout }}'
+      path: '/home/{{ admin_user }}/.ssh/'
+      owner: '{{ admin_user }}'
+      group: '{{ admin_group }}'
       mode: '0700'
 
   # ...let's make sure the SSH keys are up to date.
@@ -77,7 +81,7 @@
 
   - name: 'get local admin keys checksum'
     stat:
-      path: '/home/{{ admin_user.stdout }}/.ssh/authorized_keys'
+      path: '/home/{{ admin_user }}/.ssh/authorized_keys'
       checksum_algorithm: 'sha256'
     register: 'local_admin_keys_checksum'
     changed_when: 'local_admin_keys_checksum.stat.checksum is not defined or local_admin_keys_checksum.stat.checksum != admin_keys_checksum.stdout'
@@ -99,9 +103,9 @@
     - name: 'upload latest admin keys'
       copy:
         src: '{{ admin_temp.stdout }}'
-        dest: '/home/{{ admin_user.stdout }}/.ssh/authorized_keys'
-        owner: '{{ admin_user.stdout }}'
-        group: '{{ admin_user.stdout }}'
+        dest: '/home/{{ admin_user }}/.ssh/authorized_keys'
+        owner: '{{ admin_user }}'
+        group: '{{ admin_group }}'
         mode: '0700'
     - name: 'delete temp file'
       become: false
@@ -113,7 +117,7 @@
 
   - name: 'determine if admin user has been configured'
     stat:
-      path: '/home/{{ admin_user.stdout }}/.zshrc'
+      path: '/home/{{ admin_user }}/.zshrc'
     register: 'admin_zshrc'
 
   - name: 'configure admin user'
@@ -122,33 +126,33 @@
       copy:
         remote_src: true
         src: '/tmp/.oh-my-zsh'
-        dest: '/home/{{ admin_user.stdout }}/'
-        owner: '{{ admin_user.stdout }}'
-        group: '{{ admin_user.stdout }}'
+        dest: '/home/{{ admin_user }}/'
+        owner: '{{ admin_user }}'
+        group: '{{ admin_group }}'
         mode: '0770'
 
     - name: 'copy dotfiles for admin'
       copy:
         remote_src: true
         src: '/tmp/dotfiles'
-        dest: '/home/{{ admin_user.stdout }}/'
-        owner: '{{ admin_user.stdout }}'
-        group: '{{ admin_user.stdout }}'
+        dest: '/home/{{ admin_user }}/'
+        owner: '{{ admin_user }}'
+        group: '{{ admin_group }}'
         mode: '0770'
 
     - name: 'purge bashrc file (in preparation of stowing)'
       file:
-        path: '/home/{{ admin_user.stdout }}/.bashrc'
+        path: '/home/{{ admin_user }}/.bashrc'
         state: 'absent'
 
     - name: 'purge zshrc file (in preparation of stowing)'
       file:
-        path: '/home/{{ admin_user.stdout }}/.zshrc'
+        path: '/home/{{ admin_user }}/.zshrc'
         state: 'absent'
 
     - name: 'deploy dotfiles for admin'
       command:
-        cmd: 'su - {{ admin_user.stdout }} -c "cd /home/{{ admin_user.stdout }}/dotfiles/; stow bash git tmux zsh"'
+        cmd: 'su - {{ admin_user }} -c "cd /home/{{ admin_user }}/dotfiles/; stow bash git tmux zsh"'
         warn: false # become_user is dumb and broken, I know what I'm doing. fuck off.
     when: 'not admin_zshrc.stat.exists'
 

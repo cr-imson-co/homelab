@@ -1,0 +1,7 @@
+#!/usr/bin/env ansible-playbook
+---
+
+- hosts: 'nemesis.cr.imson.co'
+  roles:
+  - 'config'
+  - 'valheim-server'

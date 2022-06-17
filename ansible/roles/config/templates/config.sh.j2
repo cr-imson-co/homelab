@@ -11,8 +11,8 @@ set -o errexit -o pipefail -o noclobber -o nounset
 
 {% for k,v in configs.get(config_name).items() %}
 {% if v is iterable and (v is not string and v is not mapping) %}
-{{ config_name|upper }}_{{ k|upper }}=({{ v|join(" ") }})
+{{ config_name|upper }}_{{ k|upper }}=({{ v|map('replace', '\\', '\\\\')|map('replace', '$', '\\$')|map('replace', '"', '\\"')|map('regex_replace', '^(.*)$', '"\\1"')|join(" ") }})
 {% else %}
-{{ config_name|upper }}_{{ k|upper }}={{ v|string }}
+{{ config_name|upper }}_{{ k|upper }}="{{ v|string|replace('\\', '\\\\')|replace('$', '\\$')|replace('"','\\"') }}"
 {% endif %}
 {% endfor %}

@@ -46,3 +46,7 @@
   roles:
   - 'certpackage'
   - 'docker-nginx'
+
+- hosts: 'stellar.cr.imson.co'
+  roles:
+  - 'pihole-vpn'

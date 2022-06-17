@@ -24,6 +24,7 @@
   - 'mount-check'
   - 'mount-space-alert'
   - 'pihole-lan'
+  - 'pihole-vpn'
   - 'raspios'
   - 'ssh'
   - 'updates'

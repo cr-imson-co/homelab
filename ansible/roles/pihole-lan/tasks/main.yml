@@ -1,6 +1,6 @@
 ---
 
-- name: 'configure pihole'
+- name: 'configure pihole-lan'
   become: true
   block:
   - name: 'create lighttpd service config dir'

@@ -1,0 +1,78 @@
+#
+# cr.imson.co
+#
+# valheim docker configuration
+# @author Damian Bushong <katana@odios.us>
+#
+version: '3.7'
+
+networks:
+  valheim:
+    name: 'valheim'
+  crimson:
+    name: 'crimson'
+    external: true
+
+volumes:
+  valheim_config:
+  valheim_data:
+
+services:
+  valheim:
+    container_name: 'valheim'
+    image: 'ghcr.io/lloesche/valheim-server'
+    restart: 'unless-stopped'
+    stop_grace_period: '2m'
+    logging:
+      driver: 'json-file'
+      options:
+        max-file: '10'
+        max-size: '10m'
+    env_file:
+    - 'valheim.env'
+    environment:
+      SERVER_NAME: 'cr.imson.co valheim server'
+      SERVER_PORT: '2456'
+      SERVER_PUBLIC: 'false'
+      WORLD_NAME: 'Crimson'
+      # SERVER_PASS: ''
+      # ADMINLIST_IDS: ''
+      # PERMITTEDLIST_IDS: ''
+      #! specified via valheim.env
+      UPDATE_CRON: ''
+      RESTART_CRON: '15 3 * * *'
+      RESTART_IF_IDLE: 'true'
+      BACKUPS: 'true'
+      BACKUPS_DIRECTORY: '/backups'
+      BACKUPS_CRON: '3 * * * *'
+      BACKUPS_MAX_COUNT: '10'
+      BACKUPS_IF_IDLE: 'false'
+      VALHEIM_PLUS: 'true'
+      # supervisor / nginxproxy configuration
+      SUPERVISOR_HTTP: 'true'
+      SUPERVISOR_HTTP_PORT: '9001'
+      VIRTUAL_HOST: 'valheim.cr.imson.co'
+      VIRTUAL_PORT: '9001'
+      CERT_NAME: 'cr.imson.co'
+      SSL_POLICY: 'Mozilla-Intermediate'
+      HTTPS_METHOD: 'redirect'
+    volumes:
+    - type: 'bind'
+      source: '/srv/valheim/backups'
+      target: '/backups'
+    - type: 'volume'
+      source: 'valheim_config'
+      target: '/config'
+    - type: 'volume'
+      source: 'valheim_data'
+      target: '/opt/valheim'
+    networks:
+      crimson:
+        aliases:
+        - 'valheim'
+    ports:
+    - '0.0.0.0:2456:2456/udp'
+    - '0.0.0.0:2457:2457/udp'
+    # - '9001:9001/tcp'
+    cap_add:
+    - 'sys_nice'
