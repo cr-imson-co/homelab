@@ -3,6 +3,14 @@
 - name: 'manage volume-backup service'
   become: true
   block:
+  - name: 'deploy volume-backup staging directory'
+    file:
+      state: 'directory'
+      path: '{{ configs.backup.staging_path }}'
+      owner: 'root'
+      group: 'root'
+      mode: '0770'
+
   - name: 'deploy volume-backup script'
     copy:
       src: 'volume-backup.sh'
@@ -10,6 +18,7 @@
       owner: 'root'
       group: 'staff'
       mode: '0744'
+
   - name: 'deploy volume-backup systemd service'
     copy:
       src: 'volume-backup.service'
@@ -18,6 +27,7 @@
       group: 'root'
       mode: '0644'
     register: 'volume_backup_service'
+
   - name: 'deploy volume-backup systemd timer'
     copy:
       src: 'volume-backup.timer'
@@ -26,10 +36,29 @@
       group: 'root'
       mode: '0644'
     register: 'volume_backup_timer'
+
+  - name: 'deploy volume-backup systemd timer system-level configuration directory'
+    file:
+      state: 'directory'
+      path: '{{ configs.global.systemd_unit_path }}/volume-backup.timer.d'
+      owner: 'root'
+      group: 'root'
+      mode: '0775'
+
+  - name: 'deploy volume-backup systemd timer system-level configuration file'
+    template:
+      src: '01-volume-backup-schedule.conf.j2'
+      dest: '{{ configs.global.systemd_unit_path }}/volume-backup.timer.d/01-volume-backup-schedule.conf'
+      owner: 'root'
+      group: 'root'
+      mode: '0644'
+    register: 'volume_backup_timer_sched'
+
   - name: 'systemd daemon-reload'
     systemd:
       daemon_reload: true
-    when: 'volume_backup_service.changed or volume_backup_timer.changed'
+    when: 'volume_backup_service.changed or volume_backup_timer.changed or volume_backup_timer_sched.changed'
+
   - name: 'deploy docker hook directories'
     file:
       state: 'directory'
@@ -48,25 +77,13 @@
 
 - name: 'manage volume-backup hooks'
   become: true
-  block:
-  - name: 'deploy check-backup-mount hook'
-    copy:
-      src: 'hooks/pre-backup/check-backup-mount.sh'
-      dest: '{{ configs.docker.hook_path }}/pre-backup/check-backup-mount.sh'
-      owner: 'root'
-      group: 'docker'
-      mode: '0740'
-  - name: 'deploy notify-success hook'
-    copy:
-      src: 'hooks/post-backup/notify-success.sh'
-      dest: '{{ configs.docker.hook_path }}/post-backup/notify-success.sh'
-      owner: 'root'
-      group: 'docker'
-      mode: '0740'
-  - name: 'deploy backup-repo hook'
-    copy:
-      src: 'hooks/snapshot-backup/backup-repo.sh'
-      dest: '{{ configs.docker.hook_path }}/snapshot-backup/backup-repo.sh'
-      owner: 'root'
-      group: 'docker'
-      mode: '0740'
+  copy:
+    src: 'hooks/{{ item }}'
+    dest: '{{ configs.docker.hook_path }}/{{ item }}'
+    owner: 'root'
+    group: 'docker'
+    mode: '0770'
+  with_items:
+  - 'pre-backup/check-backup-mount.sh'
+  - 'post-backup/notify-success.sh'
+  - 'snapshot-backup/backup-repo.sh'

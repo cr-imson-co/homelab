@@ -1,0 +1,10 @@
+[Unit]
+Description=Regular backups for valheim server docker volumes.
+
+[Timer]
+OnCalendar=Sun *-*-* 23:00:00
+RandomizedDelaySec=3600
+Persistent=true
+
+[Install]
+WantedBy=timers.target

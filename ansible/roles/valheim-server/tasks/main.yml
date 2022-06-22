@@ -45,6 +45,37 @@
     with_fileglob:
     - 'scripts/*'
 
+  - name: 'deploy valheim-volume-backup script'
+    copy:
+      src: 'backup/valheim-volume-backup.sh'
+      dest: '{{ configs.global.local_bin_path }}/valheim-volume-backup.sh'
+      owner: 'root'
+      group: 'staff'
+      mode: '0744'
+
+  - name: 'deploy valheim-volume-backup systemd service'
+    copy:
+      src: 'backup/valheim-volume-backup.service'
+      dest: '{{ configs.global.systemd_unit_path }}/valheim-volume-backup.service'
+      owner: 'root'
+      group: 'root'
+      mode: '0644'
+    register: 'volume_backup_service'
+
+  - name: 'deploy valheim-volume-backup systemd timer'
+    copy:
+      src: 'backup/valheim-volume-backup.timer'
+      dest: '{{ configs.global.systemd_unit_path }}/valheim-volume-backup.timer'
+      owner: 'root'
+      group: 'root'
+      mode: '0644'
+    register: 'volume_backup_timer'
+
+  - name: 'systemd daemon-reload'
+    systemd:
+      daemon_reload: true
+    when: 'volume_backup_service.changed or volume_backup_timer.changed'
+
   - name: 'deploy docker hook directories'
     file:
       state: 'directory'
@@ -59,6 +90,13 @@
     - 'post-stop-valheim'
     - 'pre-update-valheim'
     - 'post-update-valheim'
+    - 'pre-backup-valheim'
+    - 'post-backup-valheim'
+    - 'snapshot-backup-valheim'
+    - 'cleanup-backup-valheim'
+    - 'move-backup-valheim'
+    - 'backup-volume-valheim'
+    - 'backup-image-valheim'
 
   - name: 'deploy valheim hooks'
     copy:
@@ -71,3 +109,5 @@
     - 'post-start/valheim.sh'
     - 'post-stop/valheim.sh'
     - 'pre-stop/valheim.sh'
+    - 'pre-backup-valheim/check-backup-mount-valheim.sh'
+    - 'post-backup-valheim/notify-success-valheim.sh'

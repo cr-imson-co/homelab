@@ -1,0 +1,9 @@
+[Unit]
+Description=Regular backups for valheim server docker volumes.
+After=network-online.target
+Wants=network-online.target
+OnFailure=failure-notification@valheim-volume-backup.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/valheim-volume-backup.sh

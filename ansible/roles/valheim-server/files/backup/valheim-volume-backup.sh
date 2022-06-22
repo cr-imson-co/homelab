@@ -2,7 +2,7 @@
 #
 # cr.imson.co
 #
-# volume-backup service
+# valheim variant of the volume-backup service
 # @author Damian Bushong <katana@odios.us>
 #
 
@@ -14,21 +14,22 @@ set -o errexit -o pipefail -o noclobber -o nounset
 . "$HOMELAB_CONFIG_PATH/global_config.sh"
 . "$HOMELAB_CONFIG_PATH/docker_config.sh"
 . "$HOMELAB_CONFIG_PATH/backup_config.sh"
+. "$HOMELAB_CONFIG_PATH/valheim_config.sh"
 
 BACKUP_TIME=$(date +%s)
 
 VOLUME_DESC=
 SERVICE_DESC=
 HUMANE_TIME=$(date --date="@$BACKUP_TIME")
-BACKUP_SUBPATH=$BACKUP_DEST_PATH/$GLOBAL_SYSTEM_NAME/backup_$BACKUP_TIME
+BACKUP_SUBPATH=$BACKUP_DEST_PATH/${GLOBAL_SYSTEM_NAME}-valheim/backup_$BACKUP_TIME
 
 # import the dockercompose function
-. "$DOCKER_SCRIPTS_PATH/common.sh"
+. "$VALHEIM_SCRIPTS_PATH/common.sh"
 
 # import the hook functions
 . "$DOCKER_HOOK_PATH/hook.sh"
 
-hook pre-backup
+hook pre-backup-valheim
 
 # need to grab services and volumes currently in use
 SERVICES=$(dockercompose config --services)
@@ -44,26 +45,26 @@ for SERVICE in $SERVICES; do
   SERVICES_TO_IMAGE_IDS[$SERVICE]=$(dockercompose images -q "$SERVICE")
 done
 
-hook cleanup-backup "$BACKUP_STAGING_PATH"
+hook cleanup-backup-valheim "$BACKUP_STAGING_PATH"
 
 # just in case a prior run failed or something...
 echo :: preparing staging directory...
 [ -e "$BACKUP_STAGING_PATH/.backup_metadata" ] && rm "$BACKUP_STAGING_PATH/.backup_metadata"
-[ -e "$BACKUP_STAGING_PATH/$DOCKER_YML_FILENAME.bz2" ] && rm "$BACKUP_STAGING_PATH/$DOCKER_YML_FILENAME.bz2"
+[ -e "$BACKUP_STAGING_PATH/$VALHEIM_YML_FILENAME.bz2" ] && rm "$BACKUP_STAGING_PATH/$VALHEIM_YML_FILENAME.bz2"
 find "$BACKUP_STAGING_PATH/" -name "*.tar.bz2" -exec rm {} \;
 find "$BACKUP_STAGING_PATH/" -name "*.labels.json" -exec rm {} \;
 
-hook snapshot-backup
+hook snapshot-backup-valheim
 
 echo :: snapshotting current docker-compose file...
-bzip2 -c "$DOCKER_YML_PATH/$DOCKER_YML_FILENAME" > "$BACKUP_STAGING_PATH/$DOCKER_YML_FILENAME.bz2"
+bzip2 -c "$VALHEIM_YML_PATH/$VALHEIM_YML_FILENAME" > "$BACKUP_STAGING_PATH/$VALHEIM_YML_FILENAME.bz2"
 
-hook pre-stop
+hook pre-stop-valheim
 
 echo :: stopping containers...
 dockercompose down
 
-hook post-stop
+hook post-stop-valheim
 
 # containers MUST be stopped in order to back volumes up safely
 #   because we don't want things getting half-written
@@ -76,7 +77,7 @@ fi
 
 echo :: beginning volume exports...
 for _VOLUME in $VOLUMES; do
-  VOLUME=${DOCKER_PROJECT_NAME}_${_VOLUME}
+  VOLUME=${VALHEIM_PROJECT_NAME}_${_VOLUME}
 
   if [[ "$(docker inspect "$VOLUME" -f '{{index .Labels "backup.exclude"}}')" == "true" ]]; then
     continue
@@ -102,12 +103,12 @@ for SERVICE in $SERVICES; do
   fi
 done
 
-hook pre-start
+hook pre-start-valheim
 
 echo :: starting containers back up...
 dockercompose up -d
 
-hook post-start
+hook post-start-valheim
 
 echo :: creating metadata file...
 
@@ -129,7 +130,7 @@ for SERVICE in $SERVICES; do
   SERVICE_DESC+=$'\n'
 done
 for _VOLUME in $VOLUMES; do
-  VOLUME=${DOCKER_PROJECT_NAME}_${_VOLUME}
+  VOLUME=${VALHEIM_PROJECT_NAME}_${_VOLUME}
 
   if [[ "$(docker inspect "$VOLUME" -f '{{index .Labels "backup.exclude"}}')" == "true" ]]; then
     continue
@@ -157,20 +158,20 @@ volumes:
 $VOLUME_DESC
 EOF
 
-hook move-backup "$BACKUP_STAGING_PATH" "$BACKUP_SUBPATH"
+hook move-backup-valheim "$BACKUP_STAGING_PATH" "$BACKUP_SUBPATH"
 
 echo :: moving files from staging to backup location...
 mkdir -p "$BACKUP_SUBPATH"
 cp "$BACKUP_STAGING_PATH"/{.backup_metadata,docker-compose.yml.bz2,*.tar.bz2,*.labels.json} "$BACKUP_SUBPATH"
 
-hook cleanup-backup "$BACKUP_STAGING_PATH"
+hook cleanup-backup-valheim "$BACKUP_STAGING_PATH"
 
 echo :: cleaning up staging directory...
 rm "$BACKUP_STAGING_PATH/.backup_metadata"
-rm "$BACKUP_STAGING_PATH/docker-compose.yml.bz2"
+rm "$BACKUP_STAGING_PATH/$VALHEIM_YML_FILENAME.bz2"
 rm "$BACKUP_STAGING_PATH"/*.tar.bz2
 rm "$BACKUP_STAGING_PATH"/*.labels.json
 
-hook post-backup
+hook post-backup-valheim
 
 echo :: backup complete

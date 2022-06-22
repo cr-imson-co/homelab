@@ -39,7 +39,9 @@
   "backup": {
     "dest_path": "/mnt/backup",
     "staging_path": "/opt/volume-backup",
-    "git_repo": "git@gitlab.cr.imson.co:cr.imson.co/homelab.git"
+    "backup_repo": "true",
+    "git_repo": "git@gitlab.cr.imson.co:cr.imson.co/homelab.git",
+    "backup_schedule": "Mon *-*-* 02:00:00"
   },
   "mount": {
     "samba_credentials_path": "/etc/samba/credentials",

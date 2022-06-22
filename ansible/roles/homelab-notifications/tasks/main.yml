@@ -33,6 +33,13 @@
       group: 'root'
       mode: '0644'
     register: 'failure_notification_systemd_service'
+  - name: 'deploy apprise config file'
+    template:
+        src: 'apprise.config.yml.j2'
+        dest: '{{ configs.homelab.config_path }}/apprise.config.yml'
+        owner: 'root'
+        group: 'root'
+        mode: '0600'
   - name: 'upload apprise-requirements.txt file'
     copy:
       src: 'apprise_requirements.txt'

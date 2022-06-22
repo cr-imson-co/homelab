@@ -21,6 +21,7 @@
   - 'homelab-landing-page'
   - 'mount-check'
   - 'mount-space-alert'
+  - 'volume-backup'
 
 - hosts: 'nomad.cr.imson.co'
   roles:
@@ -29,7 +30,6 @@
   - 'homelab-share-registry'
   - 'homelab-reverse-proxy'
   - 'homelab-homer'
-  - 'volume-backup'
 
 - hosts: 'aws'
   roles:
