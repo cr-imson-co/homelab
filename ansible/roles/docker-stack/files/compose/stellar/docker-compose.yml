@@ -51,6 +51,9 @@ services:
     - type: 'bind'
       source: '/srv/docker/02-vpn.conf'
       target: '/etc/dnsmasq.d/02-vpn.conf'
+    - type: 'bind'
+      source: '/srv/docker/03-extra.conf'
+      target: '/etc/dnsmasq.d/03-extra.conf'
     secrets:
     - 'pihole_admin'
 

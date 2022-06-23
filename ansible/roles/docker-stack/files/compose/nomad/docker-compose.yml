@@ -263,7 +263,7 @@ services:
     networks:
       crimson:
         aliases:
-          - 'nextcloud-db'
+        - 'nextcloud-db'
     volumes:
     - type: 'volume'
       source: 'nextcloud_mariadb_data'
@@ -294,7 +294,7 @@ services:
     networks:
       crimson:
         aliases:
-          - 'cloud'
+        - 'cloud'
     volumes:
     - type: 'volume'
       source: 'nextcloud_root'
