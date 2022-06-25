@@ -28,5 +28,5 @@ set -o nounset
 
 export ANSIBLE_HOST_KEY_CHECKING=False
 ansible-playbook \
-  -i "${NAME}" \
+  -i "${NAME}," \
   "init.playbook.yml"

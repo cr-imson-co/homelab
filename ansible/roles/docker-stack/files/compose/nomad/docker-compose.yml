@@ -364,3 +364,20 @@ services:
       target: '/var/run/docker.sock'
     depends_on:
     - 'gitlab'
+
+  cifs_proxy:
+    container_name: 'cifs_proxy'
+    image: 'marcnuri/port-forward'
+    logging:
+      driver: 'json-file'
+      options:
+        max-file: '10'
+        max-size: '10m'
+    environment:
+      LOCAL_PORT: '445'
+      REMOTE_PORT: '445'
+      REMOTE_HOST: 'neutron.cr.imson.co'
+    networks:
+      crimson:
+    ports:
+    - '0.0.0.0:445:445'
