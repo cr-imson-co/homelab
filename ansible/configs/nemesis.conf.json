@@ -71,6 +71,7 @@
     "yml_filename": "docker-compose.yml",
     "yml_path": "/srv/valheim",
     "scripts_path": "/srv/valheim",
-    "backups_path": "/srv/valheim/backups"
+    "backups_path": "/srv/valheim/backups",
+    "plugins_path": "/srv/valheim/plugins"
   }
 }

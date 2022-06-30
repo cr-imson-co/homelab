@@ -4,7 +4,7 @@
 # valheim docker configuration
 # @author Damian Bushong <katana@odios.us>
 #
-version: '3.7'
+version: '3.8'
 
 networks:
   valheim:
@@ -49,7 +49,6 @@ services:
       BACKUPS_CRON: '3 * * * *'
       BACKUPS_MAX_COUNT: '10'
       BACKUPS_IF_IDLE: 'false'
-      # VALHEIM_PLUS: 'false'
       BEPINEX: 'true'
       # supervisor / nginxproxy configuration
       SUPERVISOR_HTTP: 'true'
@@ -63,6 +62,12 @@ services:
     - type: 'bind'
       source: '/srv/valheim/backups'
       target: '/backups'
+    - type: 'bind'
+      source: '/srv/valheim/plugins'
+      target: '/config/bepinex/plugins'
+    - type: 'bind'
+      source: '/srv/valheim/valheim_plus.cfg'
+      target: '/config/bepinex/valheim_plus.cfg'
     - type: 'volume'
       source: 'valheim_config'
       target: '/config'
@@ -76,6 +81,5 @@ services:
     ports:
     - '0.0.0.0:2456:2456/udp'
     - '0.0.0.0:2457:2457/udp'
-    # - '9001:9001/tcp'
     cap_add:
     - 'sys_nice'

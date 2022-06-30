@@ -21,6 +21,7 @@ volumes:
   nextcloud_data:
   nextcloud_mariadb_data:
   portainer_data:
+  gitlab_runner_home:
   gitlab_runner_config:
 
 secrets:
@@ -161,6 +162,7 @@ services:
       options:
         max-file: '10'
         max-size: '10m'
+    shm_size: '512m'
     environment:
       VIRTUAL_HOST: 'gitlab.cr.imson.co,containers.cr.imson.co'
       CERT_NAME: 'cr.imson.co'
@@ -310,7 +312,7 @@ services:
 
   portainer:
     container_name: 'portainer'
-    image: 'portainer/portainer-ce:2.13.1'
+    image: 'portainer/portainer-ce:2.14.0'
     restart: 'unless-stopped'
     logging:
       driver: 'json-file'
@@ -356,6 +358,9 @@ services:
     #   interval: '3m'
     #   retries: 3
     volumes:
+    - type: 'volume'
+      source: 'gitlab_runner_home'
+      target: '/home/gitlab-runner'
     - type: 'volume'
       source: 'gitlab_runner_config'
       target: '/etc/gitlab-runner'

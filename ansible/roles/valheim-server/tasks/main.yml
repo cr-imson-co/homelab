@@ -19,6 +19,22 @@
       group: 'docker'
       mode: '0770'
 
+  - name: 'create bepinex plugins path'
+    file:
+      state: 'directory'
+      path: '{{ configs.valheim.plugins_path }}'
+      owner: 'root'
+      group: 'docker'
+      mode: '0770'
+
+  - name: 'deploy valheim plus config'
+    copy:
+      src: 'config/valheim_plus.cfg'
+      dest: '{{ configs.valheim.scripts_path }}'
+      owner: 'root'
+      group: 'docker'
+      mode: '0640'
+
   - name: 'deploy docker-compose.yml'
     copy:
       src: 'compose/docker-compose.yml'

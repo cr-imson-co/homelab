@@ -116,7 +116,7 @@ services:
 
   keycloak:
     container_name: 'keycloak'
-    image: 'containers.cr.imson.co/cr.imson.co/keycloak-custom:18.0.0'
+    image: 'containers.cr.imson.co/cr.imson.co/keycloak-custom:18.0.2'
     restart: 'unless-stopped'
     logging:
       driver: 'json-file'
@@ -165,7 +165,7 @@ services:
 
   portainer_agent:
     container_name: 'portainer_agent'
-    image: 'portainer/agent:2.13.1'
+    image: 'portainer/agent:2.14.0'
     restart: 'unless-stopped'
     logging:
       driver: 'json-file'
