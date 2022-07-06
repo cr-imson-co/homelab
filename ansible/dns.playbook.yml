@@ -6,7 +6,7 @@
   # - 'config'
   - 'pihole-lan'
 
-- hosts: 'comet.cr.imson.co'
+- hosts: 'stellar.cr.imson.co'
   roles:
   - 'config'
   - 'pihole-vpn'

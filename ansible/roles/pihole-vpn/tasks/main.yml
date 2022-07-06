@@ -3,16 +3,52 @@
 - name: 'configure pihole-vpn'
   become: true
   block:
-  - name: 'deploy dns entries for vpn'
-    copy:
-      src: '02-vpn.conf'
-      dest: '{{ configs.docker.scripts_path }}/02-vpn.conf'
-      owner: 'root'
-      group: 'root'
-      mode: '0644'
-    register: 'dns_update'
+  - name: 'get latest dns config checksum' # noqa command-instead-of-shell no-changed-when
+    become: false
+    local_action:
+      module: 'shell'
+      cmd: >
+        curl -s --head "https://gitlab.cr.imson.co/api/v4/projects/149/repository/files/vpn%2F02-vpn.conf?ref=main" \
+          | grep x-gitlab-content-sha256 \
+          | awk "{print \$2}"
+      warn: false
+    register: 'vpn_dns_checksum'
 
-  - name: 'restart dns'
-    command: '{{ configs.docker.scripts_path }}/hup.sh dns'
-    ignore_errors: true
-    when: 'dns_update.changed'
+  - name: 'get local dns config checksum'
+    stat:
+      path: '{{ configs.docker.scripts_path }}/02-vpn.conf'
+      checksum_algorithm: 'sha256'
+    register: 'local_vpn_dns_checksum'
+    changed_when: 'local_vpn_dns_checksum.stat.checksum is not defined or local_vpn_dns_checksum.stat.checksum != vpn_dns_checksum.stdout'
+
+  - name: 'update vpn dns config'
+    block:
+    - name: 'create local temp file' # noqa command-instead-of-shell
+      become: false
+      local_action:
+        module: 'shell'
+        cmd: 'mktemp'
+      register: 'vpn_dns_temp'
+    - name: 'download latest vpn dns config'
+      become: false
+      local_action:
+        module: 'get_url'
+        url: 'https://gitlab.cr.imson.co/cr.imson.co/dns-configs/-/raw/main/vpn/02-vpn.conf'
+        dest: '{{ vpn_dns_temp.stdout }}'
+    - name: 'upload latest dns config'
+      copy:
+        src: '{{ vpn_dns_temp.stdout }}'
+        dest: '{{ configs.docker.scripts_path }}/02-vpn.conf'
+        owner: 'root'
+        group: 'root'
+        mode: '0644'
+    - name: 'delete temp file'
+      become: false
+      local_action:
+        module: 'file'
+        path: '{{ vpn_dns_temp.stdout }}'
+        state: 'absent'
+    - name: 'restart dns'
+      command: '{{ configs.docker.scripts_path }}/hup.sh dns'
+      ignore_errors: true
+    when: 'local_vpn_dns_checksum.changed'

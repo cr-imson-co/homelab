@@ -46,19 +46,6 @@
       mode: '0640'
     when: 'ansible_hostname == "nomad"'
 
-  - name: 'create shim dnsmasq config files if needed'
-    copy:
-      content: ''
-      dest: '{{ configs.docker.scripts_path }}/{{ item }}'
-      force: false
-      owner: 'root'
-      group: 'root'
-      mode: '0644'
-    with_items:
-    - '02-vpn.conf'
-    - '03-extra.conf'
-    when: 'ansible_hostname == "stellar"'
-
   - name: 'deploy docker stack management scripts'
     copy:
       src: '{{ item }}'

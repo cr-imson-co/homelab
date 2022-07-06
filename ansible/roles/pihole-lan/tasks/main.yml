@@ -19,15 +19,51 @@
       group: 'root'
       mode: '0644'
 
-  - name: 'deploy dns entries for lan'
-    copy:
-      src: '02-lan.conf'
-      dest: '/etc/dnsmasq.d/02-lan.conf'
-      owner: 'root'
-      group: 'root'
-      mode: '0644'
-    register: 'dns_update'
+  - name: 'get latest dns config checksum' # noqa command-instead-of-shell no-changed-when
+    become: false
+    local_action:
+      module: 'shell'
+      cmd: >
+        curl -s --head "https://gitlab.cr.imson.co/api/v4/projects/149/repository/files/lan%2F02-lan.conf?ref=main" \
+          | grep x-gitlab-content-sha256 \
+          | awk "{print \$2}"
+      warn: false
+    register: 'lan_dns_checksum'
 
-  - name: 'restart dns'
-    command: 'pihole restartdns'
-    when: 'dns_update.changed'
+  - name: 'get local dns config checksum'
+    stat:
+      path: '/etc/dnsmasq.d/02-lan.conf'
+      checksum_algorithm: 'sha256'
+    register: 'local_lan_dns_checksum'
+    changed_when: 'local_lan_dns_checksum.stat.checksum is not defined or local_lan_dns_checksum.stat.checksum != lan_dns_checksum.stdout'
+
+  - name: 'update lan dns config'
+    block:
+    - name: 'create local temp file' # noqa command-instead-of-shell
+      become: false
+      local_action:
+        module: 'shell'
+        cmd: 'mktemp'
+      register: 'lan_dns_temp'
+    - name: 'download latest lan dns config'
+      become: false
+      local_action:
+        module: 'get_url'
+        url: 'https://gitlab.cr.imson.co/cr.imson.co/dns-configs/-/raw/main/lan/02-lan.conf'
+        dest: '{{ lan_dns_temp.stdout }}'
+    - name: 'upload latest dns config'
+      copy:
+        src: '{{ lan_dns_temp.stdout }}'
+        dest: '/etc/dnsmasq.d/02-lan.conf'
+        owner: 'root'
+        group: 'root'
+        mode: '0644'
+    - name: 'delete temp file'
+      become: false
+      local_action:
+        module: 'file'
+        path: '{{ lan_dns_temp.stdout }}'
+        state: 'absent'
+    - name: 'restart dns'
+      command: 'pihole restartdns'
+    when: 'local_lan_dns_checksum.changed'
