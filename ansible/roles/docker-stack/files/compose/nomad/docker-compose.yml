@@ -373,6 +373,7 @@ services:
   cifs_proxy:
     container_name: 'cifs_proxy'
     image: 'marcnuri/port-forward'
+    restart: 'unless-stopped'
     logging:
       driver: 'json-file'
       options:

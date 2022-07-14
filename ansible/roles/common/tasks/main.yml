@@ -25,3 +25,31 @@
       # - 'python3.9'
       # todo: upgrade all systems to distros that include python3.9...
       state: 'present'
+
+  - name: 'install microcode package'
+    block:
+    - name: 'Add the debian nonfree repository'
+      apt_repository:
+        repo: 'deb http://deb.debian.org/debian {{ ansible_distribution_release | lower }} main contrib non-free'
+        state: 'present'
+      register: 'debian_nonfree_repo'
+    - name: 'update package cache for new nonfree repo'
+      apt:
+        update_cache: true
+        force_apt_get: true
+      # when: 'debian_nonfree_repo.changed'
+    - name: 'install intel microcode package'
+      apt:
+        install_recommends: false
+        name:
+        - 'intel-microcode'
+        state: 'present'
+      when: '"Intel" in ansible_processor[1]'
+    - name: 'install amd microcode package'
+      apt:
+        install_recommends: false
+        name:
+        - 'amd64-microcode'
+        state: 'present'
+      when: '"AMD" in ansible_processor[1]'
+    when: 'ansible_distribution == "Debian" and ansible_architecture == "x86_64"'
