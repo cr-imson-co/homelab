@@ -1,0 +1,10 @@
+#!/usr/bin/env ansible-playbook
+---
+
+- hosts: 'aws'
+  roles:
+  - 'config'
+
+- hosts: 'homelab'
+  roles:
+  - 'config'
