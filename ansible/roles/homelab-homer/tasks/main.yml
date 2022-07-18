@@ -35,7 +35,5 @@
       owner: 'root'
       group: 'root'
       mode: '0644'
-    with_items:
-    - 'icons/crimson.logo_512_t.png'
-    - 'icons/favicon-16x16.png'
-    - 'icons/favicon-32x32.png'
+    with_fileglob:
+    - 'icons/*'

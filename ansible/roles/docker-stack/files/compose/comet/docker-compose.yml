@@ -115,8 +115,8 @@ services:
         max-file: '10'
         max-size: '10m'
     environment:
-      VIRTUAL_HOST: 'codebite.net,odios.us'
-      LETSENCRYPT_HOST: 'codebite.net,odios.us'
+      VIRTUAL_HOST: 'codebite.net,odios.us,kugan.io,sha.kugan.io'
+      LETSENCRYPT_HOST: 'codebite.net,odios.us,kugan.io,sha.kugan.io'
       SSL_POLICY: 'Mozilla-Intermediate'
       HTTPS_METHOD: 'redirect'
     networks:
