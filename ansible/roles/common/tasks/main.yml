@@ -22,8 +22,7 @@
       - 'unzip'
       - 'tar'
       - 'curl'
-      # - 'python3.9'
-      # todo: upgrade all systems to distros that include python3.9...
+      - 'python3.9'
       state: 'present'
 
   - name: 'install microcode package'
@@ -37,7 +36,7 @@
       apt:
         update_cache: true
         force_apt_get: true
-      # when: 'debian_nonfree_repo.changed'
+      when: 'debian_nonfree_repo.changed'
     - name: 'install intel microcode package'
       apt:
         install_recommends: false
