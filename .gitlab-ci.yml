@@ -45,12 +45,22 @@ ansible-lint:
   tags:
   - 'docker'
   - 'amd64'
-  script:
-  # todo: dynamically construct lint.yml
-  - 'cd ansible'
-  - 'ansible-lint lint.yml'
+  script: |
+    cd ansible
+    ROLES=""
+    for ROLE in $(ls roles/); do
+      ROLES="${ROLES}  - '${ROLE}'\n"
+      echo "linting role: ${ROLE}"
+    done
+    cat <<- EOF > ./.lint.yml
+    - hosts: 'lint'
+      roles:
+    $(echo -e $ROLES | sed -E "s/^[ ]{0,1}- '/  - '/g")
+    EOF
+    ansible-lint ./.lint.yml
   rules:
   - if: '($CI_PIPELINE_SOURCE == "web" || $CI_PIPELINE_SOURCE == "webide" || $CI_PIPELINE_SOURCE == "api") && $FORCE_BUILD'
   - if: '$CI_PIPELINE_SOURCE == "push"'
     changes:
     - 'ansible/*'
+    - 'ansible/**/*'

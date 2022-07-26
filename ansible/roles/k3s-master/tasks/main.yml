@@ -1,0 +1,43 @@
+---
+# installs k3s "master" node to an ARM64 system (raspberry pi)
+
+- name: 'ensure this role only runs on the rpi fleet'
+  block:
+  - name: 'check if k3s is installed'
+    stat:
+      path: '/usr/local/bin/k3s'
+    register: 'kubernetes_installed'
+
+  - name: 'install k3s binaries'
+    block:
+    - name: 'get k3s installer'
+      get_url:
+        url: 'https://get.k3s.io/'
+        dest: '/tmp/k3s-installer.sh'
+        mode: '0755'
+    - name: 'run k3s installer for master'
+      shell: '/tmp/k3s-installer.sh'
+      throttle: 1
+    - name: 'cleanup k3s installer'
+      file:
+        path: '/tmp/k3s-installer.sh'
+        state: 'absent'
+    when: 'not kubernetes_installed.stat.exists'
+
+  - name: 'fetch k3s master cluster details'
+    block:
+    - name: 'fetch k3s token'
+      become: true
+      fetch:
+        src: '/var/lib/rancher/k3s/server/node-token'
+        dest: '.k3s/node-token'
+        flat: true
+    - name: 'set aside master nodename'
+      set_fact:
+        k3s_master: '{{ ansible_fqdn }}'
+    - name: 'fetch k3s master nodename'
+      delegate_to: '127.0.0.1'
+      copy:
+        dest: '.k3s/master'
+        content: '{{ k3s_master }}'
+  when: 'ansible_distribution == "Debian" and ansible_architecture == "aarch64"'

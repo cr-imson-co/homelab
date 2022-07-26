@@ -2,6 +2,9 @@ ansible/.wireguard
 ansible/.wireguard-server
 !ansible/.wireguard/.gitkeep
 !ansible/.wireguard-server/.gitkeep
+ansible/.k3s/
+!ansible/.k3s/.gitkeep
 ansible/secrets/
 !ansible/secrets/.gitkeep
+ansible/.lint.yml
 secrets.json

@@ -1,0 +1,47 @@
+---
+# installs k3s "master" node to an ARM64 system (raspberry pi)
+
+- name: 'ensure this role only runs on the rpi fleet'
+  block:
+  - name: 'check if k3s is installed'
+    stat:
+      path: '/usr/local/bin/k3s'
+    register: 'kubernetes_installed'
+
+  - name: 'load k3s master details'
+    block:
+    - name: 'slurp node token'
+      delegate_to: '127.0.0.1'
+      slurp:
+        src: '.k3s/node-token'
+      register: 'node_token_slurp'
+    - name: 'slurp master node fqdn'
+      delegate_to: '127.0.0.1'
+      slurp:
+        src: '.k3s/master'
+      register: 'master_fqdn_slurp'
+    - name: 'load master details'
+      set_fact:
+        k3s_url: 'https://{{ master_fqdn_slurp.content | b64decode }}:6443'
+        k3s_token: '{{ node_token_slurp.content | b64decode }}'
+    when: 'not kubernetes_installed.stat.exists'
+
+  - name: 'install k3s binaries'
+    block:
+    - name: 'get k3s installer'
+      get_url:
+        url: 'https://get.k3s.io/'
+        dest: '/tmp/k3s-installer.sh'
+        mode: '0755'
+    - name: 'run k3s installer for node'
+      shell: '/tmp/k3s-installer.sh'
+      environment:
+        K3S_URL: '{{ k3s_url }}'
+        K3S_TOKEN: '{{ k3s_token }}'
+      throttle: 1
+    - name: 'cleanup k3s installer'
+      file:
+        path: '/tmp/k3s-installer.sh'
+        state: 'absent'
+    when: 'not kubernetes_installed.stat.exists'
+  when: 'ansible_distribution == "Debian" and ansible_architecture == "aarch64"'

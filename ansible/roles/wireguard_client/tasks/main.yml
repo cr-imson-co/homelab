@@ -59,6 +59,9 @@
       {% if use_dns is defined %}
       --use-dns
       {% endif %}
+      {% if use_keepalive is defined %}
+      --use-keepalive
+      {% endif %}
   when: 'not wireguard_client_configured.stat.exists'
 
 - name: 'copy wireguard client identity to ansible user dir'

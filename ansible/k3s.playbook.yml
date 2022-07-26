@@ -1,0 +1,14 @@
+#!/usr/bin/env ansible-playbook
+---
+
+- hosts: 'k3s_master:k3s_workers'
+  roles:
+  - 'k3s-prep'
+
+- hosts: 'k3s_master'
+  roles:
+  - 'k3s-master'
+
+- hosts: 'k3s_workers'
+  roles:
+  - 'k3s-worker'

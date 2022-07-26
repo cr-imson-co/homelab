@@ -1,0 +1,96 @@
+---
+# installs kubernetes prerequisites to an ARM64 system (raspberry pi)
+
+- name: 'ensure this role only runs on the rpi fleet'
+  block:
+  - name: 'check if k3s is installed'
+    stat:
+      path: '/usr/local/bin/k3s'
+    register: 'kubernetes_installed'
+
+  - name: 'prepare for k3s'
+    become: true
+    block:
+    - name: 'check if swap enabled'
+      shell: 'cat /proc/swaps | wc -l'
+      register: 'swap_enabled'
+      changed_when: '(swap_enabled is defined) and (swap_enabled.stdout | int >= 2)'
+
+    - name: 'disable swap'
+      block:
+      - name: 'disable swap for runtime'
+        command: 'swapoff -a'
+      - name: 'disable dphys-swapfile'
+        command: 'systemctl disable dphys-swapfile'
+      - name: 'disable swap in fstab'
+        replace:
+          path: '/etc/fstab'
+          regexp: '^([^#].*?\sswap\s+sw\s+.*)$'
+          replace: '# \1'
+      - name: 'reboot for swap changes to take effect'
+        become: true
+        reboot:
+          msg: 'reboot initiated by ansible to disable swap'
+          connect_timeout: 5
+          reboot_timeout: 300
+          pre_reboot_delay: 0
+          post_reboot_delay: 30
+          test_command: 'uptime'
+      when: 'swap_enabled.changed'
+
+    # debian apparently switched to nftables...ugh.
+    # idk how to tell if it's iptables or nftables though lol
+    - name: 'switch to iptables'
+      block:
+      - name: 'install iptables package'
+        apt:
+          install_recommends: false
+          name:
+          - 'iptables'
+          state: 'present'
+      - name: 'flush iptables'
+        command: 'iptables -F'
+      - name: 'update alternatives for iptables'
+        command: 'update-alternatives --set iptables /usr/sbin/iptables-legacy'
+      - name: 'update alternatives for ip6tables'
+        command: 'update-alternatives --set ip6tables /usr/sbin/ip6tables-legacy'
+      - name: 'reboot for iptables changes to take effect'
+        reboot:
+          msg: 'reboot initiated by ansible to reconfigure iptables'
+          connect_timeout: 5
+          reboot_timeout: 300
+          pre_reboot_delay: 0
+          post_reboot_delay: 30
+          test_command: 'uptime'
+
+    - name: 'check if cgroup options are set for kernel' # noqa 305
+      shell: 'grep "cgroup_enable=cpuset" /boot/cmdline.txt'
+      failed_when: false
+      changed_when: 'cgroup_options.rc != 0'
+      register: 'cgroup_options'
+
+    - name: 'update /boot/cmdline.txt'
+      block:
+      - name: 'back up /boot/cmdline.txt'
+        copy:
+          remote_src: true
+          src: '/boot/cmdline.txt'
+          dest: '/boot/cmdline.txt.bak'
+          mode: 'preserve'
+      - name: 'trim trailing newline in /boot/cmdline.txt'
+        shell: 'tr "\n" " " < /boot/cmdline.txt.bak > /boot/cmdline.txt'
+      - name: 'add cgroup options to /boot/cmdline.txt'
+        shell: 'echo "cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory" >> /boot/cmdline.txt'
+      - name: 'reboot for cmdline changes to take effect'
+        reboot:
+          msg: 'reboot initiated by ansible to update boot options'
+          connect_timeout: 5
+          reboot_timeout: 300
+          pre_reboot_delay: 0
+          post_reboot_delay: 30
+          test_command: 'uptime'
+      when: 'cgroup_options.changed'
+    when: 'not kubernetes_installed.stat.exists'
+  when: 'ansible_distribution == "Debian" and ansible_architecture == "aarch64"'
+
+
