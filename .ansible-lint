@@ -19,39 +19,6 @@ skip_list:
 # note for above: ignoring the warning at the site is preferable due to other warnings that may occur
 
 #
-# fuck you, ansible-lint.
-#
-# you do not just get to make "local_action" a linter warning and say
-#   "it's deprecated".
-#
-# this rule is not something that anyone with more than three fucking
-#   braincells should consider valid. either the ansible project itself
-#   declares it deprecated, or it isn't deprecated at all.
-#
-# https://github.com/ansible-community/ansible-lint/issues/475
-#
-# all ansible-lint says is "don't use it". there is no documentation as
-#   to *why*. it's just "deprecated", except it fucking isn't!
-#
-# https://docs.ansible.com/ansible/latest/user_guide/playbooks_delegation.html#delegating-tasks
-#
-# additionally, the *ANSIBLE* documentation states that it is a
-#   "a shorthand syntax that you can use on a per-task basis"
-#
-# that doesn't sound to me like it it's deprecated.
-# that sounds to me like some arrogant fuckwit mouth-breather decided
-#   to bikeshed. because it doesn't. look. pretty.
-#
-# it's not like its purpose could be easily mistaken either.
-#   "local_action" directly implies that it will happen LOCALLY.
-# "delegate_to: 127.0.0.1" implies the same thing, except in
-#   an (apparently) more-desired obtuse fashion.
-#
-# so fuck you, ansible-lint.
-#
-- 'deprecated-local-action'
-
-#
 # One-off handlers result in worse code in the end, quite frankly.
 #
 # Separating pieces and making the flow of execution harder to follow is a significant antipattern.

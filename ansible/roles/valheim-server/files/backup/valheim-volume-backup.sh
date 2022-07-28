@@ -3,7 +3,7 @@
 # cr.imson.co
 #
 # valheim variant of the volume-backup service
-# @author Damian Bushong <katana@odios.us>
+# @author Damian Bushong <katana@codebite.net>
 #
 
 # set sane shell env options

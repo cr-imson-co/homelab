@@ -6,5 +6,6 @@
   - 'common'
   - 'updates'
   - 'ssh'
-  - 'ansible'
+  # - 'ansible'
   - 'admin'
+  - 'warn-reboot-required'

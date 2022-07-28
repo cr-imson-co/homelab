@@ -1,0 +1,3 @@
+---
+pihole_vpn_conf_api_url: 'https://gitlab.cr.imson.co/api/v4/projects/153/repository/files/dns%2Fvpn%2F02-vpn.conf?ref=main'
+pihole_vpn_conf_url: 'https://gitlab.cr.imson.co/cr.imson.co/configs/-/raw/main/dns/vpn/02-vpn.conf'

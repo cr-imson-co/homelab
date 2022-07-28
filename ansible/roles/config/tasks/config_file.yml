@@ -1,9 +1,9 @@
 ---
 
-- name: 'set temp variable with configuration'
+- name: 'set temp variable'
   set_fact:
     config_name: '{{ item }}'
-- name: 'create configuration files'
+- name: 'create configuration file for {{ item }} config'
   become: true
   template:
     src: 'config.sh.j2'

@@ -21,3 +21,7 @@
 - hosts: 'stellar.cr.imson.co'
   roles:
   - 'pihole-vpn'
+
+- hosts: 'aws'
+  roles:
+  - 'warn-reboot-required'

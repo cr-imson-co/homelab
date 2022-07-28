@@ -22,8 +22,18 @@
       - 'unzip'
       - 'tar'
       - 'curl'
-      - 'python3.9'
       state: 'present'
+
+  # todo: remove!
+  #! this is temporary
+  #    we need to reimage the rpi with the latest raspios, rebuild the dns server
+  #    but for the time being we'll handle this problem with the tried and true method; ignoring it
+  - name: 'install python 3.9'
+    apt:
+      install_recommends: false
+      name:
+      - 'python3.9'
+    when: 'ansible_hostname != "rpi"'
 
   - name: 'install microcode package'
     block:

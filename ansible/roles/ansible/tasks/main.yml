@@ -1,7 +1,5 @@
 ---
 
-# note: this does not use
-
 - name: 'handle ansible user configuration'
   become: true
   block:
@@ -39,37 +37,32 @@
       group: '{{ devops_user }}'
       mode: '0700'
 
-  - name: 'get latest ansible keys checksum' # noqa 301
-    become: false
-    local_action:
-      module: 'shell'
-      cmd: >
-        curl -s --head "{{ ansible_keys_url }}" \
-          | grep x-gitlab-content-sha256 \
-          | awk "{print \$2}"
-      warn: false
+  - name: 'get latest ansible keys checksum'
+    delegate_to: '127.0.0.1'
+    uri:
+      url: '{{ ansible_keys_api_url }}'
+      method: 'HEAD'
     register: 'ansible_keys_checksum'
-
   - name: 'get local ansible keys checksum'
     stat:
       path: '/home/{{ devops_user }}/.ssh/authorized_keys'
       checksum_algorithm: 'sha256'
     register: 'local_ansible_keys_checksum'
-    changed_when: 'not local_ansible_keys_checksum.stat.exists or local_ansible_keys_checksum.stat.checksum != ansible_keys_checksum.stdout'
+    changed_when: 'not local_ansible_keys_checksum.stat.exists or local_ansible_keys_checksum.stat.checksum != ansible_keys_checksum.x_gitlab_content_sha256'
 
   - name: 'update ansible keys'
     block:
     - name: 'create local temp file' # noqa 305
       become: false
-      local_action:
-        module: 'shell'
+      delegate_to: '127.0.0.1'
+      command:
         cmd: 'mktemp'
       register: 'ansible_temp'
     - name: 'download latest ansible keys'
       become: false
-      local_action:
-        module: 'get_url'
-        url: 'https://gitlab.cr.imson.co/cr.imson.co/ssh-keys/-/raw/master/ansible_keys'
+      delegate_to: '127.0.0.1'
+      get_url:
+        url: '{{ ansible_keys_url }}'
         dest: '{{ ansible_temp.stdout }}'
     - name: 'upload latest ansible keys'
       copy:
@@ -80,8 +73,8 @@
         mode: '0700'
     - name: 'delete temp file'
       become: false
-      local_action:
-        module: 'file'
+      delegate_to: '127.0.0.1'
+      file:
         path: '{{ ansible_temp.stdout }}'
         state: 'absent'
     when: 'local_ansible_keys_checksum.changed'

@@ -1,0 +1,33 @@
+---
+
+- name: 'load vpn config'
+  become: false
+  block:
+  - name: 'create local temp file for config'
+    become: false
+    delegate_to: '127.0.0.1'
+    command:
+      cmd: 'mktemp' # noqa command-instead-of-module
+    register: 'vpn_config_temp'
+  - name: 'download config file for vpn'
+    become: false
+    delegate_to: '127.0.0.1'
+    get_url:
+      url: 'https://gitlab.cr.imson.co/cr.imson.co/configs/-/raw/main/vpn/{{ ansible_hostname }}.conf.json'
+      dest: '{{ vpn_config_temp.stdout }}'
+  - name: 'slurp config file'
+    become: false
+    delegate_to: '127.0.0.1'
+    slurp:
+      src: '{{ vpn_config_temp.stdout }}'
+    register: 'imported_vpn_config'
+  - name: 'load vpn config from slurped json'
+    become: false
+    set_fact:
+      vpn: '{{ imported_vpn_config.content | b64decode | from_json }}'
+  - name: 'delete local temp file'
+    become: false
+    delegate_to: '127.0.0.1'
+    file:
+      path: '{{ vpn_config_temp.stdout }}'
+      state: 'absent'

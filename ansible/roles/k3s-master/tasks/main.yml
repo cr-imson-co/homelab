@@ -32,6 +32,12 @@
         src: '/var/lib/rancher/k3s/server/node-token'
         dest: '.k3s/node-token'
         flat: true
+    - name: 'fetch kubeconfig'
+      become: true
+      fetch:
+        src: '/etc/rancher/k3s/k3s.yaml'
+        dest: '.k3s/k3s.yaml'
+        flat: true
     - name: 'set aside master nodename'
       set_fact:
         k3s_master: '{{ ansible_fqdn }}'

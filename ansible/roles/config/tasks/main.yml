@@ -1,20 +1,31 @@
 ---
 
-- name: 'load local config'
+- name: 'load and deploy host config'
   block:
-  - name: 'slurp local config'
+  - name: 'create local temp file for config'
+    become: false
+    delegate_to: '127.0.0.1'
+    command:
+      cmd: 'mktemp' # noqa command-instead-of-module
+    register: 'config_temp'
+  - name: 'download config file for ansible host'
+    become: false
+    delegate_to: '127.0.0.1'
+    get_url:
+      url: 'https://gitlab.cr.imson.co/cr.imson.co/configs/-/raw/main/ansible/{{ ansible_hostname }}.conf.json'
+      dest: '{{ config_temp.stdout }}'
+  - name: 'slurp config file'
+    become: false
     delegate_to: '127.0.0.1'
     slurp:
-      src: 'configs/{{ ansible_hostname }}.conf.json'
+      src: '{{ config_temp.stdout }}'
     register: 'imported_config'
-  - name: 'load configs as json'
+  - name: 'load config from slurped json'
+    become: false
     set_fact:
       configs: '{{ imported_config.content | b64decode | from_json }}'
-
-- name: 'handle system automation config files'
-  become: true
-  block:
-  - name: 'manage config directory'
+  - name: 'manage remote config directory'
+    become: true
     file:
       state: 'directory'
       path: '{{ configs.homelab.config_path }}'
@@ -22,19 +33,30 @@
       group: 'root'
       mode: '0755'
   - name: 'deploy configs.json'
+    become: true
     copy:
-      src: 'configs/{{ ansible_hostname }}.conf.json'
+      src: '{{ config_temp.stdout }}'
       dest: '{{ configs.homelab.config_path }}/configs.json'
       owner: 'root'
       group: 'root'
       mode: '0755'
+  - name: 'delete local temp file'
+    become: false
+    delegate_to: '127.0.0.1'
+    file:
+      path: '{{ config_temp.stdout }}'
+      state: 'absent'
+
+- name: 'handle system automation config files'
+  become: true
+  block:
   - name: 'build configuration files'
     include_tasks: 'config_file.yml'
     loop: '{{ configs.global.config_list }}'
   - name: 'check for local secrets file'
     become: false
-    local_action:
-      module: 'stat'
+    delegate_to: '127.0.0.1'
+    stat:
       path: 'secrets/{{ ansible_hostname }}.secrets.json'
     register: 'local_homelab_secrets'
   - name: 'deploy secrets file'

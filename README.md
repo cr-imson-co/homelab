@@ -10,10 +10,6 @@ image assets for the `cr.imson.co` icons / logos.
 
 ansible playbooks and roles for configuration of the environment.
 
-##### `ansible/configs/`
-
-configuration files used for ansible deployment for systems within the environment.
-
 ##### `ansible/secrets/`
 
 secrets files used for ansible deployment for systems within the environment.
@@ -120,14 +116,14 @@ handles execution of updates and rebooting as necessary.
 
 deploys and configures the docker volume backup system.
 
-##### `ansible/roles/wireguard_config/`
+##### `ansible/roles/wireguard-config/`
 
 wireguard server initial configuration.
 
-##### `ansible/roles/wireguard_client/`
+##### `ansible/roles/wireguard-client/`
 
 wireguard client installation and configuration.
 
-##### `ansible/roles/wireguard_server/`
+##### `ansible/roles/wireguard-server/`
 
 wireguard server configuration.

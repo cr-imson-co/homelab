@@ -2,7 +2,7 @@
 # cr.imson.co
 #
 # valheim docker configuration
-# @author Damian Bushong <katana@odios.us>
+# @author Damian Bushong <katana@codebite.net>
 #
 version: '3.8'
 

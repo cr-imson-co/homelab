@@ -1,0 +1,3 @@
+---
+pihole_lan_conf_api_url: 'https://gitlab.cr.imson.co/api/v4/projects/153/repository/files/dns%2Flan%2F02-lan.conf?ref=main'
+pihole_lan_conf_url: 'https://gitlab.cr.imson.co/cr.imson.co/configs/-/raw/main/dns/lan/02-lan.conf'

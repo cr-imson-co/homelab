@@ -26,3 +26,7 @@
 - hosts: 'rpi.cr.imson.co'
   roles:
   - 'pihole-lan'
+
+- hosts: 'homelab'
+  roles:
+  - 'warn-reboot-required'

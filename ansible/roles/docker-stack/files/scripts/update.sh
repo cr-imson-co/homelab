@@ -3,7 +3,7 @@
 # cr.imson.co
 #
 # docker container management scripts
-# @author Damian Bushong <katana@odios.us>
+# @author Damian Bushong <katana@codebite.net>
 #
 
 # set sane shell env options

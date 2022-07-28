@@ -50,3 +50,7 @@
 - hosts: 'stellar.cr.imson.co'
   roles:
   - 'pihole-vpn'
+
+- hosts: 'all'
+  roles:
+  - 'warn-reboot-required'

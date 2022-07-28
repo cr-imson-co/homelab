@@ -3,7 +3,7 @@
 # cr.imson.co
 #
 # certsync service
-# @author Damian Bushong <katana@odios.us>
+# @author Damian Bushong <katana@codebite.net>
 #
 
 # set sane shell env options

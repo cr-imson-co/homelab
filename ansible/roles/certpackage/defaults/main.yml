@@ -1,4 +1,5 @@
 ---
 certsync_user: 'certsync'
 certsync_group: 'certsync'
-certsync_keys_url: 'https://gitlab.cr.imson.co/api/v4/projects/107/repository/files/certsync_keys?ref=master'
+certsync_keys_api_url: 'https://gitlab.cr.imson.co/api/v4/projects/153/repository/files/ssh-keys%2Fcertsync_keys?ref=main'
+certsync_keys_url: 'https://gitlab.cr.imson.co/cr.imson.co/configs/-/raw/main/ssh-keys/certsync_keys'

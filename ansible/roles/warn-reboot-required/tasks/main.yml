@@ -1,0 +1,13 @@
+---
+
+- name: 'check if reboot required'
+  become: false
+  stat:
+    path: '/var/run/reboot-required'
+    get_md5: false
+  register: 'reboot_required'
+
+- name: 'alert when reboot is required'
+  debug:
+    msg: 'Reboot required for {{ ansible_hostname }}'
+  when: 'reboot_required.stat.exists'

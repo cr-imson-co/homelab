@@ -1,14 +1,18 @@
 #!/usr/bin/env ansible-playbook
 ---
 
-- hosts: 'wireguard_server'
-  roles:
-  - 'wireguard_server'
-
 - hosts: 'wireguard'
   roles:
-  - 'wireguard_client'
+  - 'wireguard-ansible-config'
 
 - hosts: 'wireguard_server'
   roles:
-  - 'wireguard_config'
+  - 'wireguard-server'
+
+- hosts: 'wireguard_clients'
+  roles:
+  - 'wireguard-client'
+
+- hosts: 'wireguard_server'
+  roles:
+  - 'wireguard-config'

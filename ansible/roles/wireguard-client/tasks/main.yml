@@ -52,14 +52,14 @@
   shell:
     cmd: >
       python3.9 /etc/wireguard/build_client_config.py
-      {{ vpn_ip }}
+      {{ vpn.ip }}
       --server-identity-path /etc/wireguard/{{ wireguard_interface }}/server.ident.json
       --client-identity-path /etc/wireguard/{{ wireguard_interface }}/client.ident.json
       --wg-conf-path /etc/wireguard/{{ wireguard_interface }}.conf
-      {% if use_dns is defined %}
+      {% if vpn.use_dns is defined %}
       --use-dns
       {% endif %}
-      {% if use_keepalive is defined %}
+      {% if vpn.use_keepalive is defined %}
       --use-keepalive
       {% endif %}
   when: 'not wireguard_client_configured.stat.exists'

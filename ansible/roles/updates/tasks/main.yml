@@ -14,20 +14,3 @@
     apt:
       upgrade: 'dist'
       force_apt_get: true
-
-  - name: 'check if reboot required'
-    become: false
-    stat:
-      path: '/var/run/reboot-required'
-      get_md5: false
-    register: 'reboot_required'
-
-  - name: 'reboot server'
-    reboot:
-      msg: 'reboot initiated by ansible due to distro-indicated update requirement'
-      connect_timeout: 5
-      reboot_timeout: 300
-      pre_reboot_delay: 0
-      post_reboot_delay: 30
-      test_command: 'uptime'
-    when: 'reboot_required.stat.exists'

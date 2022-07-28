@@ -45,13 +45,13 @@
   shell:
     cmd: >
       /etc/wireguard/init_server.py
-      {{ vpn_endpoint }}
-      --port {{ vpn_port }}
-      --vpn-network-cidr {{ vpn_network_cidr }}
+      {{ vpn.endpoint }}
+      --port {{ vpn.port }}
+      --vpn-network-cidr {{ vpn.network_cidr }}
       --server-config-path /etc/wireguard/{{ wireguard_interface }}/server.conf.json
       --server-identity-path /etc/wireguard/{{ wireguard_interface }}/server.ident.json
-      {% if vpn_dns_ip is defined %}
-      --dns-ip {{ vpn_dns_ip }}
+      {% if vpn.dns_ip is defined %}
+      --dns-ip {{ vpn.dns_ip }}
       {% endif %}
   when: 'not wireguard_initialized.stat.exists'
 
