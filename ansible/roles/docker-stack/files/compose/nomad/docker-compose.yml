@@ -5,7 +5,7 @@
 # @author Damian Bushong <katana@codebite.net>
 #
 
-version: '3.7'
+version: '3.8'
 
 networks:
   crimson:
@@ -154,7 +154,7 @@ services:
 
   gitlab:
     container_name: 'gitlab'
-    image: 'gitlab/gitlab-ce:latest'
+    image: 'containers.cr.imson.co/cr.imson.co/gitlab-docker:latest'
     restart: 'unless-stopped'
     stop_grace_period: '2m'
     logging:
@@ -312,7 +312,7 @@ services:
 
   portainer:
     container_name: 'portainer'
-    image: 'portainer/portainer-ce:2.14.0'
+    image: 'portainer/portainer-ce:2.14.1'
     restart: 'unless-stopped'
     logging:
       driver: 'json-file'

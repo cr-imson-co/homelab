@@ -23,7 +23,7 @@
 
   - name: 'check if a compose file should be deployed'
     become: false
-    delegate_to: 127.0.0.1
+    delegate_to: '127.0.0.1'
     stat:
       path: 'roles/docker-stack/files/compose/{{ ansible_hostname }}/docker-compose.yml'
     register: 'docker_compose_file_exists'
