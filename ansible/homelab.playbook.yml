@@ -4,16 +4,19 @@
 - hosts: 'homelab'
   roles:
   - 'config'
-  - 'certsync'
   - 'docker'
   - 'docker-stack'
-  - 'docker-nginx'
-  - 'homelab-share-backup'
-  - 'homelab-notifications'
-  - 'homelab-landing-page'
   - 'mount-check'
   - 'mount-space-alert'
+  - 'homelab-notifications'
   - 'volume-backup'
+
+- hosts: 'nomad.cr.imson.co,nemesis.cr.imson.co'
+  roles:
+  - 'certsync'
+  - 'docker-nginx'
+  - 'homelab-share-backup'
+  - 'homelab-landing-page'
 
 - hosts: 'nomad.cr.imson.co'
   roles:

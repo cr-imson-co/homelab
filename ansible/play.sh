@@ -7,7 +7,7 @@ cleanup () {
   popd > /dev/null
 
   if [ $ERR_CODE -ne 0 ]; then
-    echo !! build failed
+    echo !! run failed
   fi
 
   exit $ERR_CODE
