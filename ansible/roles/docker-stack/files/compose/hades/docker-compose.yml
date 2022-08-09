@@ -17,3 +17,26 @@ services:
     networks:
       underworld:
     command: 'sh -c "while true; do sleep 30; done;"'
+
+  portainer_agent:
+    container_name: 'portainer_agent'
+    image: 'portainer/agent:2.14.1'
+    restart: 'unless-stopped'
+    logging:
+      driver: 'json-file'
+      options:
+        max-file: '10'
+        max-size: '10m'
+    environment:
+      AGENT_PORT: 9000
+    networks:
+      underworld:
+    ports:
+    - '0.0.0.0:9000:9000'
+    volumes:
+    - type: 'bind'
+      source: '/var/run/docker.sock'
+      target: '/var/run/docker.sock'
+    - type: 'bind'
+      source: '/var/lib/docker/volumes'
+      target: '/var/lib/docker/volumes'

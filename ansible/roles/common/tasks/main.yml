@@ -33,7 +33,7 @@
       install_recommends: false
       name:
       - 'python3.9'
-    when: 'ansible_hostname != "rpi.cr.imson.co"'
+    when: 'inventory_hostname != "rpi.cr.imson.co"'
 
   - name: 'install microcode package'
     block:
