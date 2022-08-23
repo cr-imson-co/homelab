@@ -23,7 +23,7 @@ for FILESYSTEM in "${MOUNT_CHECK_REMAINING_SPACE_MOUNTS[@]}"; do
   FS_TOTAL=$(echo "$FS_INFO" | awk '{ print $2 }')
   FS_USED=$(echo "$FS_INFO" | awk '{ print $3 }')
   FS_AVAIL=$(echo "$FS_INFO" | awk '{ print $4 }')
-  FS_UTIL=$(echo "$FS_INFO" | awk '{ print substr($5, 0, length($5)) }')
+  FS_UTIL=$(echo "$FS_INFO" | awk '{ print substr($5, 0, length($5) - 1) }')
 
   if [[ "$FS_UTIL" -gt $MOUNT_SPACE_CRITICAL_THRESHOLD ]]; then
     "$GLOBAL_LOCAL_BIN_PATH/notification.sh" failure "\`$FILESYSTEM\` mount at critical mark for disk space ($FS_USED/$FS_AVAIL; $FS_UTIL% used)."

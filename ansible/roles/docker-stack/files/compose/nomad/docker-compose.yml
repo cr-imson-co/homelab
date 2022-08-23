@@ -382,7 +382,7 @@ services:
     environment:
       LOCAL_PORT: '445'
       REMOTE_PORT: '445'
-      REMOTE_HOST: 'neutron.cr.imson.co'
+      REMOTE_HOST: 'smb.cr.imson.co'
     networks:
       crimson:
     ports:

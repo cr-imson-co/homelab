@@ -2,6 +2,7 @@
 Description=Verifies that network fileshares are mounted.
 After=network-online.target
 Wants=network-online.target
+OnFailure=failure-notification@mount-check.service
 
 [Service]
 Type=oneshot

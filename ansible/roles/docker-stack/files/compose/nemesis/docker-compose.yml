@@ -116,7 +116,7 @@ services:
 
   keycloak:
     container_name: 'keycloak'
-    image: 'containers.cr.imson.co/cr.imson.co/keycloak-custom:18.0.2'
+    image: 'containers.cr.imson.co/cr.imson.co/keycloak-custom:19.0.0'
     restart: 'unless-stopped'
     logging:
       driver: 'json-file'

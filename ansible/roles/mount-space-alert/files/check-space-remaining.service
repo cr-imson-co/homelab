@@ -2,6 +2,7 @@
 Description=Warns if not enough space remains on specific filesystems.
 After=network-online.target
 Wants=network-online.target
+OnFailure=failure-notification@check-space-remaining.service
 
 [Service]
 Type=oneshot
