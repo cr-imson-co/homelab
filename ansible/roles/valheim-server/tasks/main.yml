@@ -122,7 +122,7 @@
       group: 'docker'
       mode: '0770'
     with_items:
-    - 'post-start/valheim.sh'
+    # - 'post-start/valheim.sh'
     - 'post-stop/valheim.sh'
     - 'pre-stop/valheim.sh'
     - 'pre-backup-valheim/check-backup-mount-valheim.sh'
