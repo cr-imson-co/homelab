@@ -14,3 +14,17 @@
     apt:
       upgrade: 'dist'
       force_apt_get: true
+
+  - name: 'ensure nomad is up and running again'
+    become: false
+    delegate_to: '127.0.0.1'
+    uri:
+      url: 'https://gitlab.cr.imson.co/'
+      return_content: true
+      validate_certs: true
+      status_code:
+        - 200
+    register: 'uri_output'
+    delay: 15 # every 15 seconds
+    retries: 20 # 20 retries, 15 seconds delay per should be about 5 minutes
+    until: 'uri_output.status == 200'

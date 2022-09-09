@@ -20,7 +20,7 @@ services:
 
   portainer_agent:
     container_name: 'portainer_agent'
-    image: 'portainer/agent:2.14.1'
+    image: 'portainer/agent:2.15.0'
     restart: 'unless-stopped'
     logging:
       driver: 'json-file'

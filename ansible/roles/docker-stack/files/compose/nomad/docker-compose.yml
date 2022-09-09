@@ -279,7 +279,7 @@ services:
     - 'nextcloud_mysql_root_password'
     - 'nextcloud_mysql_password'
 
-  nextcloud_nginx_translator:
+  nextcloud_nginx:
     container_name: 'nextcloud_nginx'
     image: 'containers.cr.imson.co/cr.imson.co/nextcloud-nginx-translator:latest'
     restart: 'unless-stopped'
@@ -312,7 +312,7 @@ services:
 
   portainer:
     container_name: 'portainer'
-    image: 'portainer/portainer-ce:2.14.1'
+    image: 'portainer/portainer-ce:2.15.0'
     restart: 'unless-stopped'
     logging:
       driver: 'json-file'
