@@ -18,3 +18,7 @@ body #app.is-light .tag strong.tag-text {
 body #app.is-dark .tag strong.tag-text {
   color: #ddd
 }
+
+.column.is-NaN {
+  min-width: 33.33333337% !important;
+}

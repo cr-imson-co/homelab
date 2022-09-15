@@ -18,16 +18,56 @@
       owner: 'root'
       group: 'root'
       mode: '0755'
-  - name: 'deploy homer configs'
+  - name: 'deploy homer css'
     copy:
-      src: '{{ item }}'
-      dest: '{{ configs.homer.root_path }}'
+      src: 'custom.css'
+      dest: '{{ configs.homer.root_path }}/custom.css'
       owner: 'root'
       group: 'root'
       mode: '0644'
-    with_items:
-    - 'config.yml'
-    - 'custom.css'
+  - name: 'deploy homer config'
+    block:
+    - name: 'get latest homer config checksum'
+      delegate_to: '127.0.0.1'
+      uri:
+        url: '{{ homer_conf_api_url }}'
+        method: 'HEAD'
+      register: 'homer_conf_checksum'
+    - name: 'get local homer config checksum'
+      stat:
+        path: '{{ configs.homer.root_path }}/config.yml'
+        checksum_algorithm: 'sha256'
+      register: 'local_homer_conf_checksum'
+      changed_when: 'local_homer_conf_checksum.stat.checksum is not defined or local_homer_conf_checksum.stat.checksum != homer_conf_checksum.x_gitlab_content_sha256'
+
+    - name: 'update homer config'
+      block:
+      - name: 'create local temp file' # noqa command-instead-of-module
+        become: false
+        delegate_to: '127.0.0.1'
+        command:
+          cmd: 'mktemp'
+        register: 'homer_conf_temp'
+      - name: 'download latest homer config'
+        become: false
+        delegate_to: '127.0.0.1'
+        get_url:
+          url: '{{ homer_conf_url }}'
+          dest: '{{ homer_conf_temp.stdout }}'
+      - name: 'upload latest homer config'
+        copy:
+          src: '{{ homer_conf_temp.stdout }}'
+          dest: '{{ configs.homer.root_path }}/config.yml'
+          owner: 'root'
+          group: 'root'
+          mode: '0644'
+      - name: 'delete temp file'
+        become: false
+        delegate_to: '127.0.0.1'
+        file:
+          path: '{{ homer_conf_temp.stdout }}'
+          state: 'absent'
+      when: 'local_homer_conf_checksum.changed'
   - name: 'deploy homer icons'
     copy:
       src: '{{ item }}'

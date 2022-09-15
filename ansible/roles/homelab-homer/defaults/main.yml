@@ -1,0 +1,3 @@
+---
+homer_conf_api_url: 'https://gitlab.cr.imson.co/api/v4/projects/153/repository/files/homer%2Fconfig.yml?ref=main'
+homer_conf_url: 'https://gitlab.cr.imson.co/cr.imson.co/configs/-/raw/main/homer/config.yml'
