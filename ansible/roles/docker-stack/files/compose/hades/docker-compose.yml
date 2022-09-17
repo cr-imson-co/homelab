@@ -5,19 +5,6 @@ networks:
     name: 'underworld'
 
 services:
-  placeholder:
-    container_name: 'placeholder'
-    image: 'alpine:3.8'
-    restart: 'unless-stopped'
-    logging:
-      driver: 'json-file'
-      options:
-        max-file: '3'
-        max-size: '1m'
-    networks:
-      underworld:
-    command: 'sh -c "while true; do sleep 30; done;"'
-
   portainer_agent:
     container_name: 'portainer_agent'
     image: 'portainer/agent:2.15.0'

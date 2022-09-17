@@ -117,11 +117,11 @@ services:
       source: '/srv/proxy'
       target: '/etc/nginx/conf.d'
       read_only: true
-    # healthcheck:
-    #   test: 'curl -IsSLf http://localhost/ >/dev/null || exit 1'
-    #   start_period: '1m'
-    #   interval: '3m'
-    #   retries: 3
+    healthcheck:
+      test: 'curl -IsSLf http://localhost/ >/dev/null || exit 1'
+      start_period: '1m'
+      interval: '3m'
+      retries: 3
 
   homer:
     container_name: 'homer'

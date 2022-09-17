@@ -159,6 +159,11 @@ services:
     ports:
     - '8080:8080'
     - '9990:9990'
+    healthcheck:
+      test: 'curl -IsSLf http://localhost:8080/ >/dev/null || exit 1'
+      start_period: '1m'
+      interval: '3m'
+      retries: 3
     depends_on:
     - 'keycloak_db'
 
