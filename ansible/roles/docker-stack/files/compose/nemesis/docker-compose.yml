@@ -13,6 +13,7 @@ networks:
 
 volumes:
   keycloak_mariadb_data:
+  grocy_data:
 
 secrets:
   keycloak_mysql_root_password:
@@ -116,7 +117,7 @@ services:
 
   keycloak:
     container_name: 'keycloak'
-    image: 'containers.cr.imson.co/cr.imson.co/keycloak-custom:19.0.0'
+    image: 'containers.cr.imson.co/cr.imson.co/keycloak-custom:19.0.2'
     restart: 'unless-stopped'
     logging:
       driver: 'json-file'
@@ -167,6 +168,70 @@ services:
     depends_on:
     - 'keycloak_db'
 
+  grocy_backend:
+    container_name: 'grocy_backend'
+    image: 'containers.cr.imson.co/cr.imson.co/grocy-docker/backend:latest'
+    restart: 'unless-stopped'
+    logging:
+      driver: 'json-file'
+      options:
+        max-file: '10'
+        max-size: '10m'
+    networks:
+      crimson:
+        aliases:
+        - 'grocy-backend'
+    environment:
+      GROCY_MODE: 'production'
+      GROCY_CULTURE: 'en'
+
+      MAX_UPLOAD: '50M'
+      PHP_MAX_FILE_UPLOAD: '200'
+      PHP_MAX_POST: '100M'
+      PHP_MEMORY_LIMIT: '512M'
+    volumes:
+    - type: 'volume'
+      source: 'grocy_data'
+      target: '/var/www/html/data'
+    - type: 'tmpfs'
+      target: '/tmp'
+      tmpfs:
+        size: '512M'
+    # healthcheck:
+    #   test: 'curl -IsSLf http://localhost:8080/ >/dev/null || exit 1'
+    #   start_period: '1m'
+    #   interval: '3m'
+    #   retries: 3
+
+  grocy_frontend:
+    container_name: 'grocy_frontend'
+    image: 'containers.cr.imson.co/cr.imson.co/grocy-docker/frontend:latest'
+    restart: 'unless-stopped'
+    logging:
+      driver: 'json-file'
+      options:
+        max-file: '10'
+        max-size: '10m'
+    networks:
+      crimson:
+        aliases:
+        - 'grocy-frontend'
+    environment:
+      VIRTUAL_HOST: 'grocy.cr.imson.co'
+
+      CERT_NAME: 'cr.imson.co'
+      SSL_POLICY: 'Mozilla-Intermediate'
+      HTTPS_METHOD: 'redirect'
+
+      GROCY_MODE: 'production'
+      GROCY_CULTURE: 'en'
+    # healthcheck:
+    #   test: 'curl -IsSLf http://localhost:8080/ >/dev/null || exit 1'
+    #   start_period: '1m'
+    #   interval: '3m'
+    #   retries: 3
+    depends_on:
+    - 'grocy_backend'
 
   portainer_agent:
     container_name: 'portainer_agent'
