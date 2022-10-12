@@ -9,11 +9,18 @@
   - 'ansible'
   - 'admin'
 
-- hosts: 'homelab'
+- hosts: 'aws:homelab'
   roles:
   - 'config'
   - 'docker'
   - 'docker-stack'
+
+- hosts: 'aws'
+  roles:
+  - 'disable-init-user'
+
+- hosts: 'homelab'
+  roles:
   - 'mount-check'
   - 'mount-space-alert'
   - 'homelab-notifications'
@@ -41,13 +48,6 @@
   - 'homelab-share-registry'
   - 'homelab-reverse-proxy'
   - 'homelab-homer'
-
-- hosts: 'aws'
-  roles:
-  - 'config'
-  - 'disable-init-user'
-  - 'docker'
-  - 'docker-stack'
 
 - hosts: 'rpi.cr.imson.co'
   roles:
